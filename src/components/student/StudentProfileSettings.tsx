@@ -8,30 +8,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { User, Lock, LogOut, CreditCard, Calendar } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useStudentProfile } from '@/hooks/useStudents';
+import { useUpdatePassword } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 
 const StudentProfileSettings: React.FC = () => {
   const { user, logout } = useAuth();
+  const { data: studentData, isLoading } = useStudentProfile(user?.id);
+  const updatePasswordMutation = useUpdatePassword();
   const [error, setError] = useState('');
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
   });
-
-  // Mock student data - this will be replaced with real data
-  const studentData = {
-    matricNumber: user?.profile?.matricNumber || 'STU001',
-    firstName: 'Jane',
-    lastName: 'Doe',
-    email: user?.email || '',
-    department: user?.profile?.department || 'Computer Science',
-    level: '200',
-    phone: user?.profile?.phone || '',
-    dateOfBirth: '2002-05-15',
-    address: '123 Student Avenue, University Town',
-    status: 'Active'
-  };
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,8 +38,14 @@ const StudentProfileSettings: React.FC = () => {
     }
 
     try {
-      // This will be implemented with real auth
-      console.log('Updating password for student:', user?.id);
+      if (!user?.id) {
+        throw new Error('User not authenticated');
+      }
+
+      await updatePasswordMutation.mutateAsync({ 
+        userId: user.id, 
+        newPassword: passwordData.newPassword 
+      });
       
       setPasswordData({
         currentPassword: '',
@@ -65,11 +61,37 @@ const StudentProfileSettings: React.FC = () => {
       setError(err.message || 'Failed to update password');
       toast({
         title: "Password Update Failed",
-        description: err.message || "Please check your current password and try again.",
+        description: err.message || "Please try again.",
         variant: "destructive",
       });
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="p-6">
+            <div className="text-center">Loading profile settings...</div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!studentData) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="p-6">
+            <div className="text-center text-red-600">
+              Unable to load student profile. Please contact the administrator.
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -77,7 +99,7 @@ const StudentProfileSettings: React.FC = () => {
         <CardHeader>
           <CardTitle className="flex items-center">
             <User className="w-5 h-5 mr-2" />
-            Student Profile
+            Student Profile Settings
           </CardTitle>
           <CardDescription>
             View your profile information and account settings
@@ -98,7 +120,7 @@ const StudentProfileSettings: React.FC = () => {
                     <Label className="text-sm font-medium text-gray-500">Matric Number</Label>
                     <div className="flex items-center space-x-2">
                       <CreditCard className="h-4 w-4 text-gray-400" />
-                      <span className="font-medium">{studentData.matricNumber}</span>
+                      <span className="font-medium">{studentData.matric_number}</span>
                     </div>
                   </div>
 
@@ -106,7 +128,7 @@ const StudentProfileSettings: React.FC = () => {
                     <Label className="text-sm font-medium text-gray-500">Full Name</Label>
                     <div className="flex items-center space-x-2">
                       <User className="h-4 w-4 text-gray-400" />
-                      <span>{studentData.firstName} {studentData.lastName}</span>
+                      <span>{studentData.first_name} {studentData.last_name}</span>
                     </div>
                   </div>
 
@@ -117,7 +139,7 @@ const StudentProfileSettings: React.FC = () => {
 
                   <div className="space-y-2">
                     <Label className="text-sm font-medium text-gray-500">Department</Label>
-                    <span className="text-gray-700">{studentData.department}</span>
+                    <span className="text-gray-700">{studentData.departments?.name || 'Unknown'}</span>
                   </div>
 
                   <div className="space-y-2">
@@ -136,18 +158,29 @@ const StudentProfileSettings: React.FC = () => {
                     <Label className="text-sm font-medium text-gray-500">Date of Birth</Label>
                     <div className="flex items-center space-x-2">
                       <Calendar className="h-4 w-4 text-gray-400" />
-                      <span>{new Date(studentData.dateOfBirth).toLocaleDateString()}</span>
+                      <span>
+                        {studentData.date_of_birth 
+                          ? new Date(studentData.date_of_birth).toLocaleDateString()
+                          : 'Not provided'
+                        }
+                      </span>
                     </div>
                   </div>
 
                   <div className="space-y-2">
                     <Label className="text-sm font-medium text-gray-500">Address</Label>
-                    <span className="text-gray-700">{studentData.address}</span>
+                    <span className="text-gray-700">{studentData.address || 'Not provided'}</span>
                   </div>
 
                   <div className="space-y-2">
                     <Label className="text-sm font-medium text-gray-500">Status</Label>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      studentData.status === 'active' 
+                        ? 'bg-green-100 text-green-800'
+                        : studentData.status === 'inactive'
+                        ? 'bg-yellow-100 text-yellow-800'
+                        : 'bg-blue-100 text-blue-800'
+                    }`}>
                       {studentData.status}
                     </span>
                   </div>
@@ -216,8 +249,11 @@ const StudentProfileSettings: React.FC = () => {
                   </div>
                 </div>
 
-                <Button type="submit">
-                  Change Password
+                <Button 
+                  type="submit" 
+                  disabled={updatePasswordMutation.isPending}
+                >
+                  {updatePasswordMutation.isPending ? 'Updating...' : 'Change Password'}
                 </Button>
               </form>
             </TabsContent>

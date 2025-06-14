@@ -7,23 +7,44 @@ import { Label } from '@/components/ui/label';
 import { User, Mail, Phone, MapPin, Calendar, Book } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '../../contexts/AuthContext';
+import { useStudentProfile } from '../../hooks/useStudents';
 
 const StudentProfile: React.FC = () => {
   const { user } = useAuth();
+  const { data: studentData, isLoading } = useStudentProfile(user?.id);
   const [isEditing, setIsEditing] = useState(false);
   const [profileData, setProfileData] = useState({
-    name: user?.profile?.name || 'Jane Doe',
-    email: user?.email || 'jane.doe@student.edu',
-    phone: user?.profile?.phone || '+234 901 234 5678',
-    matricNumber: user?.profile?.matricNumber || 'CSC/2020/002',
-    department: user?.profile?.department || 'Computer Science',
-    level: '400L',
+    name: '',
+    email: '',
+    phone: '',
+    matricNumber: '',
+    department: '',
+    level: '',
     session: '2023/2024',
-    address: '123 University Road, Lagos',
-    dateOfBirth: '1999-05-15',
-    stateOfOrigin: 'Lagos',
+    address: '',
+    dateOfBirth: '',
+    stateOfOrigin: '',
     nationality: 'Nigerian'
   });
+
+  // Update profile data when student data loads
+  React.useEffect(() => {
+    if (studentData) {
+      setProfileData({
+        name: `${studentData.first_name} ${studentData.last_name}`,
+        email: studentData.email || '',
+        phone: studentData.phone || '',
+        matricNumber: studentData.matric_number || '',
+        department: studentData.departments?.name || 'Unknown',
+        level: studentData.level || '',
+        session: '2023/2024',
+        address: studentData.address || '',
+        dateOfBirth: studentData.date_of_birth || '',
+        stateOfOrigin: '',
+        nationality: 'Nigerian'
+      });
+    }
+  }, [studentData]);
 
   const handleSave = () => {
     setIsEditing(false);
@@ -35,8 +56,49 @@ const StudentProfile: React.FC = () => {
 
   const handleCancel = () => {
     setIsEditing(false);
-    // Reset to original values if needed
+    // Reset to original values
+    if (studentData) {
+      setProfileData({
+        name: `${studentData.first_name} ${studentData.last_name}`,
+        email: studentData.email || '',
+        phone: studentData.phone || '',
+        matricNumber: studentData.matric_number || '',
+        department: studentData.departments?.name || 'Unknown',
+        level: studentData.level || '',
+        session: '2023/2024',
+        address: studentData.address || '',
+        dateOfBirth: studentData.date_of_birth || '',
+        stateOfOrigin: '',
+        nationality: 'Nigerian'
+      });
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="p-6">
+            <div className="text-center">Loading profile...</div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!studentData) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="p-6">
+            <div className="text-center text-red-600">
+              Unable to load student profile. Please contact the administrator.
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

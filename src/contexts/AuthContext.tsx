@@ -7,6 +7,7 @@ import {
   User,
   LecturerProfile 
 } from '@/hooks/useAuth';
+import { useStudentProfile } from '@/hooks/useStudents';
 
 interface AuthUser {
   id: string;
@@ -17,6 +18,9 @@ interface AuthUser {
     matricNumber?: string;
     department?: string;
     phone?: string;
+    level?: string;
+    firstName?: string;
+    lastName?: string;
   };
 }
 
@@ -47,6 +51,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const authenticateUserMutation = useAuthenticateUser();
   const { data: userData } = useUser(authenticatedUserId || undefined);
   const { data: lecturerProfile } = useLecturerProfile(authenticatedUserId || undefined);
+  const { data: studentProfile } = useStudentProfile(authenticatedUserId || undefined);
 
   useEffect(() => {
     // Check for existing session on mount
@@ -67,8 +72,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (userData.role === 'lecturer' && lecturerProfile) {
         profileData = {
           name: `${lecturerProfile.first_name} ${lecturerProfile.last_name}`,
+          firstName: lecturerProfile.first_name,
+          lastName: lecturerProfile.last_name,
           department: lecturerProfile.department,
           phone: lecturerProfile.phone
+        };
+      } else if (userData.role === 'student' && studentProfile) {
+        profileData = {
+          name: `${studentProfile.first_name} ${studentProfile.last_name}`,
+          firstName: studentProfile.first_name,
+          lastName: studentProfile.last_name,
+          matricNumber: studentProfile.matric_number,
+          department: studentProfile.departments?.name || 'Unknown',
+          phone: studentProfile.phone,
+          level: studentProfile.level
         };
       }
 
@@ -82,7 +99,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(updatedUser);
       localStorage.setItem('user', JSON.stringify(updatedUser));
     }
-  }, [userData, lecturerProfile, authenticatedUserId]);
+  }, [userData, lecturerProfile, studentProfile, authenticatedUserId]);
 
   const login = async (email: string, password: string, role: 'lecturer' | 'student') => {
     try {
