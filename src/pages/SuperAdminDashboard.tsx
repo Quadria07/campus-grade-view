@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import Header from '../components/Header';
@@ -11,11 +10,21 @@ import { Users, GraduationCap, BookOpen, Settings, Shield, Database, Plus, Downl
 import { useStudents } from '../hooks/useStudents';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import AddUserDialog from '../components/admin/AddUserDialog';
+import AddLecturerDialog from '../components/admin/AddLecturerDialog';
+import StudentForm from '../components/lecturer/StudentForm';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useAddStudent } from '../hooks/useStudents';
 
 const SuperAdminDashboard: React.FC = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
+  const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
+  const [isAddLecturerDialogOpen, setIsAddLecturerDialogOpen] = useState(false);
+  const [isAddStudentDialogOpen, setIsAddStudentDialogOpen] = useState(false);
+  
   const { data: students } = useStudents();
+  const addStudentMutation = useAddStudent();
 
   // Fetch lecturers data
   const { data: lecturers } = useQuery({
@@ -88,6 +97,15 @@ const SuperAdminDashboard: React.FC = () => {
     a.href = url;
     a.download = 'lecturers.csv';
     a.click();
+  };
+
+  const handleAddStudent = async (studentData: any) => {
+    try {
+      await addStudentMutation.mutateAsync(studentData);
+      setIsAddStudentDialogOpen(false);
+    } catch (error) {
+      console.error('Failed to add student:', error);
+    }
   };
 
   return (
@@ -232,7 +250,7 @@ const SuperAdminDashboard: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="flex justify-between items-center mb-4">
-                  <Button>
+                  <Button onClick={() => setIsAddUserDialogOpen(true)}>
                     <Plus className="w-4 h-4 mr-2" />
                     Add New User
                   </Button>
@@ -279,7 +297,7 @@ const SuperAdminDashboard: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="flex justify-between items-center mb-4">
-                  <Button>
+                  <Button onClick={() => setIsAddLecturerDialogOpen(true)}>
                     <Plus className="w-4 h-4 mr-2" />
                     Add New Lecturer
                   </Button>
@@ -320,7 +338,7 @@ const SuperAdminDashboard: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="flex justify-between items-center mb-4">
-                  <Button>
+                  <Button onClick={() => setIsAddStudentDialogOpen(true)}>
                     <Plus className="w-4 h-4 mr-2" />
                     Add New Student
                   </Button>
@@ -424,6 +442,33 @@ const SuperAdminDashboard: React.FC = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Dialog Components */}
+      <AddUserDialog 
+        open={isAddUserDialogOpen} 
+        onOpenChange={setIsAddUserDialogOpen} 
+      />
+      
+      <AddLecturerDialog 
+        open={isAddLecturerDialogOpen} 
+        onOpenChange={setIsAddLecturerDialogOpen} 
+      />
+
+      <Dialog open={isAddStudentDialogOpen} onOpenChange={setIsAddStudentDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Add New Student</DialogTitle>
+            <DialogDescription>
+              Enter the student details below
+            </DialogDescription>
+          </DialogHeader>
+          <StudentForm
+            onSubmit={handleAddStudent}
+            onCancel={() => setIsAddStudentDialogOpen(false)}
+            isLoading={addStudentMutation.isPending}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
