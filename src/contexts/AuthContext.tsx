@@ -50,23 +50,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('Checking for existing session...');
       
-      // Use the custom verification function to check session
       const storedUser = localStorage.getItem('auth_user');
       if (storedUser) {
         const parsedUser = JSON.parse(storedUser);
-        
-        // Verify the user still exists and get updated info
-        const { data, error } = await supabase.rpc('verify_user_password', {
-          p_email: parsedUser.email,
-          p_password: 'dummy' // This won't work for verification but we just want to check if user exists
-        });
-
-        if (!error && data && data.length > 0) {
-          setUser(parsedUser);
-        } else {
-          // Clear invalid session
-          localStorage.removeItem('auth_user');
-        }
+        setUser(parsedUser);
       }
     } catch (error) {
       console.error('Session check error:', error);
@@ -96,6 +83,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       const userData = data[0];
+      console.log('Login response data:', userData);
       
       // Check if role matches expected role (if provided)
       if (expectedRole && userData.role !== expectedRole) {
@@ -109,7 +97,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const { data: lecturerProfile } = await supabase
           .from('lecturer_profiles')
           .select('*')
-          .eq('user_id', userData.user_id)
+          .eq('user_id', userData.id)
           .single();
           
         if (lecturerProfile) {
@@ -125,7 +113,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const { data: studentProfile } = await supabase
           .from('students')
           .select('*')
-          .eq('user_id', userData.user_id)
+          .eq('user_id', userData.id)
           .single();
           
         if (studentProfile) {
@@ -142,7 +130,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       const authUser: AuthUser = {
-        id: userData.user_id,
+        id: userData.id,
         email: email,
         role: userData.role as 'lecturer' | 'user' | 'super_admin',
         profile
