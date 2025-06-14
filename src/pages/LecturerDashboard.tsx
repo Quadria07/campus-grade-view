@@ -8,16 +8,83 @@ import { Users, BookOpen, FileText, Upload, Download } from 'lucide-react';
 import StudentManagement from '../components/lecturer/StudentManagement';
 import CourseManagement from '../components/lecturer/CourseManagement';
 import ResultManagement from '../components/lecturer/ResultManagement';
+import { useStudents } from '@/hooks/useStudents';
+import { useCourses } from '@/hooks/useCourses';
+import { useResults } from '@/hooks/useResults';
+import { useSessions } from '@/hooks/useSessions';
 
 const LecturerDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState('overview');
 
+  // Fetch real data
+  const { data: students = [] } = useStudents();
+  const { data: courses = [] } = useCourses();
+  const { data: results = [] } = useResults();
+  const { data: sessions = [] } = useSessions();
+
+  // Calculate real statistics
+  const activeStudents = students.filter(student => student.status === 'active');
+  const activeCourses = courses.length;
+  const totalResults = results.length;
+  const activeSessions = sessions.filter(session => session.is_active);
+
+  // Get recent activity - last 10 results
+  const recentResults = results
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .slice(0, 5);
+
   const stats = [
-    { title: 'Total Students', value: '247', icon: Users, change: '+12%' },
-    { title: 'Active Courses', value: '8', icon: BookOpen, change: '+2' },
-    { title: 'Results Uploaded', value: '156', icon: FileText, change: '+25%' },
-    { title: 'Pending Reviews', value: '3', icon: Upload, change: '-2' },
+    { 
+      title: 'Active Students', 
+      value: activeStudents.length.toString(), 
+      icon: Users, 
+      change: `${students.length} total` 
+    },
+    { 
+      title: 'Active Courses', 
+      value: activeCourses.toString(), 
+      icon: BookOpen, 
+      change: `${courses.length} total` 
+    },
+    { 
+      title: 'Results Uploaded', 
+      value: totalResults.toString(), 
+      icon: FileText, 
+      change: `${results.filter(r => new Date(r.created_at) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)).length} this month` 
+    },
+    { 
+      title: 'Active Sessions', 
+      value: activeSessions.length.toString(), 
+      icon: Upload, 
+      change: `${sessions.length} total` 
+    },
   ];
+
+  // Function to handle quick actions
+  const handleUploadResults = () => {
+    setActiveTab('results');
+  };
+
+  const handleAddStudents = () => {
+    setActiveTab('students');
+  };
+
+  const handleGenerateReports = () => {
+    setActiveTab('results');
+    // This will open the results tab where reports can be generated
+  };
+
+  const formatTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    
+    if (diffInHours < 1) return 'Just now';
+    if (diffInHours < 24) return `${diffInHours} hours ago`;
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays === 1) return '1 day ago';
+    return `${diffInDays} days ago`;
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -49,7 +116,7 @@ const LecturerDashboard: React.FC = () => {
                   <CardContent>
                     <div className="text-2xl font-bold">{stat.value}</div>
                     <p className="text-xs text-muted-foreground">
-                      <span className="text-green-600">{stat.change}</span> from last month
+                      <span className="text-blue-600">{stat.change}</span>
                     </p>
                   </CardContent>
                 </Card>
@@ -64,15 +131,26 @@ const LecturerDashboard: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <Button className="h-20 flex flex-col items-center justify-center space-y-2">
+                  <Button 
+                    className="h-20 flex flex-col items-center justify-center space-y-2"
+                    onClick={handleUploadResults}
+                  >
                     <Upload className="h-6 w-6" />
                     <span>Upload Results</span>
                   </Button>
-                  <Button variant="outline" className="h-20 flex flex-col items-center justify-center space-y-2">
+                  <Button 
+                    variant="outline" 
+                    className="h-20 flex flex-col items-center justify-center space-y-2"
+                    onClick={handleAddStudents}
+                  >
                     <Users className="h-6 w-6" />
                     <span>Add Students</span>
                   </Button>
-                  <Button variant="outline" className="h-20 flex flex-col items-center justify-center space-y-2">
+                  <Button 
+                    variant="outline" 
+                    className="h-20 flex flex-col items-center justify-center space-y-2"
+                    onClick={handleGenerateReports}
+                  >
                     <Download className="h-6 w-6" />
                     <span>Generate Reports</span>
                   </Button>
@@ -84,30 +162,42 @@ const LecturerDashboard: React.FC = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Recent Activity</CardTitle>
+                <CardDescription>Latest results and system updates</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">Results uploaded for CSC301</p>
-                      <p className="text-xs text-gray-500">2 hours ago</p>
+                  {recentResults.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <FileText className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                      <p>No recent activity</p>
+                      <p className="text-sm">Upload some results to see activity here</p>
                     </div>
-                  </div>
-                  <div className="flex items-center space-x-4">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">New student registered</p>
-                      <p className="text-xs text-gray-500">5 hours ago</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-4">
-                    <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">Course CSC401 updated</p>
-                      <p className="text-xs text-gray-500">1 day ago</p>
-                    </div>
-                  </div>
+                  ) : (
+                    recentResults.map((result, index) => (
+                      <div key={result.id} className="flex items-center space-x-4">
+                        <div className={`w-2 h-2 rounded-full ${
+                          index === 0 ? 'bg-green-500' : 
+                          index === 1 ? 'bg-blue-500' : 'bg-yellow-500'
+                        }`}></div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">
+                            Result uploaded for {result.course?.code || 'Unknown Course'} - {result.student?.matric_number || 'Unknown Student'}
+                          </p>
+                          <div className="flex items-center space-x-2">
+                            <p className="text-xs text-gray-500">{formatTimeAgo(result.created_at)}</p>
+                            <span className={`text-xs px-2 py-1 rounded-full ${
+                              result.grade === 'A' || result.grade === 'AB' ? 'bg-green-100 text-green-800' :
+                              result.grade === 'B' || result.grade === 'BC' ? 'bg-blue-100 text-blue-800' :
+                              result.grade === 'C' || result.grade === 'CD' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-red-100 text-red-800'
+                            }`}>
+                              Grade: {result.grade} ({result.score}%)
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </CardContent>
             </Card>
