@@ -6,11 +6,89 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Users, GraduationCap, BookOpen, Settings, Shield, Database } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Users, GraduationCap, BookOpen, Settings, Shield, Database, Plus, Download } from 'lucide-react';
+import { useStudents } from '../hooks/useStudents';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 const SuperAdminDashboard: React.FC = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
+  const { data: students } = useStudents();
+
+  // Fetch lecturers data
+  const { data: lecturers } = useQuery({
+    queryKey: ['lecturers'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('lecturer_profiles')
+        .select('*');
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  // Fetch courses data
+  const { data: courses } = useQuery({
+    queryKey: ['courses'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('courses')
+        .select('*');
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  // Fetch all users data
+  const { data: allUsers } = useQuery({
+    queryKey: ['all_users'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*');
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const handleExportUsers = () => {
+    if (!allUsers) return;
+    const csvData = allUsers.map(user => `${user.email},${user.role},${user.is_active}`).join('\n');
+    const blob = new Blob([`Email,Role,Active\n${csvData}`], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'users.csv';
+    a.click();
+  };
+
+  const handleExportStudents = () => {
+    if (!students) return;
+    const csvData = students.map(student => 
+      `${student.matric_number},${student.first_name},${student.last_name},${student.email},${student.level}`
+    ).join('\n');
+    const blob = new Blob([`Matric Number,First Name,Last Name,Email,Level\n${csvData}`], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'students.csv';
+    a.click();
+  };
+
+  const handleExportLecturers = () => {
+    if (!lecturers) return;
+    const csvData = lecturers.map(lecturer => 
+      `${lecturer.employee_id || 'N/A'},${lecturer.first_name},${lecturer.last_name},${lecturer.department || 'N/A'}`
+    ).join('\n');
+    const blob = new Blob([`Employee ID,First Name,Last Name,Department\n${csvData}`], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'lecturers.csv';
+    a.click();
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -50,19 +128,19 @@ const SuperAdminDashboard: React.FC = () => {
                   <Users className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">1,234</div>
-                  <p className="text-xs text-muted-foreground">+10% from last month</p>
+                  <div className="text-2xl font-bold">{allUsers?.length || 0}</div>
+                  <p className="text-xs text-muted-foreground">Active system users</p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Active Lecturers</CardTitle>
+                  <CardTitle className="text-sm font-medium">Total Lecturers</CardTitle>
                   <GraduationCap className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">89</div>
-                  <p className="text-xs text-muted-foreground">+2 new this week</p>
+                  <div className="text-2xl font-bold">{lecturers?.length || 0}</div>
+                  <p className="text-xs text-muted-foreground">Registered lecturers</p>
                 </CardContent>
               </Card>
 
@@ -72,8 +150,8 @@ const SuperAdminDashboard: React.FC = () => {
                   <Users className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">1,145</div>
-                  <p className="text-xs text-muted-foreground">+15% from last semester</p>
+                  <div className="text-2xl font-bold">{students?.length || 0}</div>
+                  <p className="text-xs text-muted-foreground">Enrolled students</p>
                 </CardContent>
               </Card>
 
@@ -83,48 +161,13 @@ const SuperAdminDashboard: React.FC = () => {
                   <BookOpen className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">156</div>
-                  <p className="text-xs text-muted-foreground">Across all departments</p>
+                  <div className="text-2xl font-bold">{courses?.length || 0}</div>
+                  <p className="text-xs text-muted-foreground">Available courses</p>
                 </CardContent>
               </Card>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Recent Activities</CardTitle>
-                  <CardDescription>Latest system activities and user actions</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">New lecturer registered</p>
-                        <p className="text-xs text-gray-500">Dr. Jane Smith - Computer Science</p>
-                      </div>
-                      <span className="text-xs text-gray-400">2 hours ago</span>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">Course results uploaded</p>
-                        <p className="text-xs text-gray-500">CSC401 - Advanced Programming</p>
-                      </div>
-                      <span className="text-xs text-gray-400">4 hours ago</span>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                      <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">System maintenance completed</p>
-                        <p className="text-xs text-gray-500">Database optimization</p>
-                      </div>
-                      <span className="text-xs text-gray-400">1 day ago</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
               <Card>
                 <CardHeader>
                   <CardTitle>System Status</CardTitle>
@@ -133,21 +176,48 @@ const SuperAdminDashboard: React.FC = () => {
                 <CardContent>
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm">Database</span>
-                      <Badge variant="default" className="bg-green-500">Healthy</Badge>
+                      <span className="text-sm">Database Connection</span>
+                      <Badge variant="default" className="bg-green-500">Connected</Badge>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm">Authentication</span>
+                      <span className="text-sm">User Management</span>
                       <Badge variant="default" className="bg-green-500">Active</Badge>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm">Storage</span>
-                      <Badge variant="default" className="bg-green-500">Available</Badge>
+                      <span className="text-sm">Course Management</span>
+                      <Badge variant="default" className="bg-green-500">Operational</Badge>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm">API Services</span>
+                      <span className="text-sm">Results System</span>
                       <Badge variant="default" className="bg-green-500">Running</Badge>
                     </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Quick Actions</CardTitle>
+                  <CardDescription>Frequently used administrative actions</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Button onClick={handleExportUsers} variant="outline" size="sm">
+                      <Download className="w-4 h-4 mr-1" />
+                      Export Users
+                    </Button>
+                    <Button onClick={handleExportStudents} variant="outline" size="sm">
+                      <Download className="w-4 h-4 mr-1" />
+                      Export Students
+                    </Button>
+                    <Button onClick={handleExportLecturers} variant="outline" size="sm">
+                      <Download className="w-4 h-4 mr-1" />
+                      Export Lecturers
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      <Settings className="w-4 h-4 mr-1" />
+                      System Config
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -162,12 +232,41 @@ const SuperAdminDashboard: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="flex justify-between items-center mb-4">
-                  <Button>Add New User</Button>
-                  <Button variant="outline">Export Users</Button>
+                  <Button>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add New User
+                  </Button>
+                  <Button variant="outline" onClick={handleExportUsers}>
+                    <Download className="w-4 h-4 mr-2" />
+                    Export Users
+                  </Button>
                 </div>
-                <p className="text-center text-gray-500 py-8">
-                  User management interface will be implemented here
-                </p>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Role</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Created</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {allUsers?.map((user) => (
+                      <TableRow key={user.id}>
+                        <TableCell>{user.email}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{user.role}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={user.is_active ? "default" : "destructive"}>
+                            {user.is_active ? "Active" : "Inactive"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </CardContent>
             </Card>
           </TabsContent>
@@ -180,12 +279,35 @@ const SuperAdminDashboard: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="flex justify-between items-center mb-4">
-                  <Button>Add New Lecturer</Button>
-                  <Button variant="outline">Export Lecturers</Button>
+                  <Button>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add New Lecturer
+                  </Button>
+                  <Button variant="outline" onClick={handleExportLecturers}>
+                    <Download className="w-4 h-4 mr-2" />
+                    Export Lecturers
+                  </Button>
                 </div>
-                <p className="text-center text-gray-500 py-8">
-                  Lecturer management interface will be implemented here
-                </p>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Employee ID</TableHead>
+                      <TableHead>Department</TableHead>
+                      <TableHead>Phone</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {lecturers?.map((lecturer) => (
+                      <TableRow key={lecturer.id}>
+                        <TableCell>{lecturer.first_name} {lecturer.last_name}</TableCell>
+                        <TableCell>{lecturer.employee_id || 'N/A'}</TableCell>
+                        <TableCell>{lecturer.department || 'N/A'}</TableCell>
+                        <TableCell>{lecturer.phone || 'N/A'}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </CardContent>
             </Card>
           </TabsContent>
@@ -198,12 +320,44 @@ const SuperAdminDashboard: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="flex justify-between items-center mb-4">
-                  <Button>Add New Student</Button>
-                  <Button variant="outline">Export Students</Button>
+                  <Button>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add New Student
+                  </Button>
+                  <Button variant="outline" onClick={handleExportStudents}>
+                    <Download className="w-4 h-4 mr-2" />
+                    Export Students
+                  </Button>
                 </div>
-                <p className="text-center text-gray-500 py-8">
-                  Student management interface will be implemented here
-                </p>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Matric Number</TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Level</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {students?.slice(0, 10).map((student) => (
+                      <TableRow key={student.id}>
+                        <TableCell>{student.matric_number}</TableCell>
+                        <TableCell>{student.first_name} {student.last_name}</TableCell>
+                        <TableCell>{student.email}</TableCell>
+                        <TableCell>{student.level}</TableCell>
+                        <TableCell>
+                          <Badge variant="default">{student.status}</Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                {students && students.length > 10 && (
+                  <p className="text-sm text-gray-500 mt-2">
+                    Showing 10 of {students.length} students
+                  </p>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -216,13 +370,19 @@ const SuperAdminDashboard: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Button variant="outline" className="flex items-center">
-                    <Database className="w-4 h-4 mr-2" />
-                    Database Management
+                  <Button variant="outline" className="flex items-center h-20">
+                    <Database className="w-6 h-6 mr-3" />
+                    <div className="text-left">
+                      <div className="font-medium">Database Management</div>
+                      <div className="text-sm text-gray-500">Manage database connections and backups</div>
+                    </div>
                   </Button>
-                  <Button variant="outline" className="flex items-center">
-                    <Settings className="w-4 h-4 mr-2" />
-                    System Settings
+                  <Button variant="outline" className="flex items-center h-20">
+                    <Settings className="w-6 h-6 mr-3" />
+                    <div className="text-left">
+                      <div className="font-medium">System Settings</div>
+                      <div className="text-sm text-gray-500">Configure global system parameters</div>
+                    </div>
                   </Button>
                 </div>
               </CardContent>
@@ -236,9 +396,29 @@ const SuperAdminDashboard: React.FC = () => {
                 <CardDescription>Configure your super admin preferences</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-center text-gray-500 py-8">
-                  Admin settings interface will be implemented here
-                </p>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-4 border rounded-lg">
+                    <div>
+                      <h4 className="font-medium">Email Notifications</h4>
+                      <p className="text-sm text-gray-500">Receive system alerts and updates</p>
+                    </div>
+                    <Button variant="outline" size="sm">Configure</Button>
+                  </div>
+                  <div className="flex items-center justify-between p-4 border rounded-lg">
+                    <div>
+                      <h4 className="font-medium">Security Settings</h4>
+                      <p className="text-sm text-gray-500">Manage security policies and access controls</p>
+                    </div>
+                    <Button variant="outline" size="sm">Manage</Button>
+                  </div>
+                  <div className="flex items-center justify-between p-4 border rounded-lg">
+                    <div>
+                      <h4 className="font-medium">System Maintenance</h4>
+                      <p className="text-sm text-gray-500">Schedule maintenance windows and updates</p>
+                    </div>
+                    <Button variant="outline" size="sm">Schedule</Button>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
