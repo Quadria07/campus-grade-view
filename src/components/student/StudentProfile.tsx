@@ -4,22 +4,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { User, Mail, Phone, MapPin, Calendar, Book } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Calendar, Book, GraduationCap } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '../../contexts/AuthContext';
-import { useStudentProfile } from '../../hooks/useStudents';
 
 const StudentProfile: React.FC = () => {
-  const { user } = useAuth();
-  const { data: studentData, isLoading } = useStudentProfile(user?.id);
+  const { user, updateUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [profileData, setProfileData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    matricNumber: '',
-    department: '',
-    level: '',
+    name: user?.profile?.name || '',
+    email: user?.email || '',
+    phone: user?.profile?.phone || '',
+    matricNumber: user?.profile?.matricNumber || '',
+    department: user?.profile?.department || '',
+    level: user?.profile?.level || '',
     session: '2023/2024',
     address: '',
     dateOfBirth: '',
@@ -27,26 +25,20 @@ const StudentProfile: React.FC = () => {
     nationality: 'Nigerian'
   });
 
-  // Update profile data when student data loads
-  React.useEffect(() => {
-    if (studentData) {
-      setProfileData({
-        name: `${studentData.first_name} ${studentData.last_name}`,
-        email: studentData.email || '',
-        phone: studentData.phone || '',
-        matricNumber: studentData.matric_number || '',
-        department: studentData.departments?.name || 'Unknown',
-        level: studentData.level || '',
-        session: '2023/2024',
-        address: studentData.address || '',
-        dateOfBirth: studentData.date_of_birth || '',
-        stateOfOrigin: '',
-        nationality: 'Nigerian'
-      });
-    }
-  }, [studentData]);
-
   const handleSave = () => {
+    if (user) {
+      const updatedUser = {
+        ...user,
+        email: profileData.email,
+        profile: {
+          ...user.profile,
+          name: profileData.name,
+          phone: profileData.phone,
+        }
+      };
+      updateUser(updatedUser);
+    }
+    
     setIsEditing(false);
     toast({
       title: "Profile Updated",
@@ -57,48 +49,20 @@ const StudentProfile: React.FC = () => {
   const handleCancel = () => {
     setIsEditing(false);
     // Reset to original values
-    if (studentData) {
-      setProfileData({
-        name: `${studentData.first_name} ${studentData.last_name}`,
-        email: studentData.email || '',
-        phone: studentData.phone || '',
-        matricNumber: studentData.matric_number || '',
-        department: studentData.departments?.name || 'Unknown',
-        level: studentData.level || '',
-        session: '2023/2024',
-        address: studentData.address || '',
-        dateOfBirth: studentData.date_of_birth || '',
-        stateOfOrigin: '',
-        nationality: 'Nigerian'
-      });
-    }
+    setProfileData({
+      name: user?.profile?.name || '',
+      email: user?.email || '',
+      phone: user?.profile?.phone || '',
+      matricNumber: user?.profile?.matricNumber || '',
+      department: user?.profile?.department || '',
+      level: user?.profile?.level || '',
+      session: '2023/2024',
+      address: '',
+      dateOfBirth: '',
+      stateOfOrigin: '',
+      nationality: 'Nigerian'
+    });
   };
-
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <Card>
-          <CardContent className="p-6">
-            <div className="text-center">Loading profile...</div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (!studentData) {
-    return (
-      <div className="space-y-6">
-        <Card>
-          <CardContent className="p-6">
-            <div className="text-center text-red-600">
-              Unable to load student profile. Please contact the administrator.
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -178,12 +142,15 @@ const StudentProfile: React.FC = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="matricNumber">Matric Number</Label>
-                <Input
-                  id="matricNumber"
-                  value={profileData.matricNumber}
-                  disabled
-                  className="bg-gray-50"
-                />
+                <div className="relative">
+                  <GraduationCap className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="matricNumber"
+                    value={profileData.matricNumber}
+                    disabled
+                    className="pl-10 bg-gray-50"
+                  />
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -274,7 +241,7 @@ const StudentProfile: React.FC = () => {
         <CardHeader>
           <CardTitle className="flex items-center">
             <Book className="w-5 h-5 mr-2" />
-            Academic Information
+            Academic Summary
           </CardTitle>
         </CardHeader>
         <CardContent>
