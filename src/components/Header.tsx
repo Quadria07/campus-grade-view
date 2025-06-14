@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -8,7 +9,7 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
-import { User, LogOut, Settings } from 'lucide-react';
+import { User, LogOut, Settings, Shield } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const Header: React.FC = () => {
@@ -37,7 +38,22 @@ const Header: React.FC = () => {
 
   const getUserRole = () => {
     if (!user) return '';
-    return user.role === 'lecturer' ? 'Lecturer' : 'Student';
+    switch (user.role) {
+      case 'lecturer': return 'Lecturer';
+      case 'user': return 'Student';
+      case 'super_admin': return 'Super Admin';
+      default: return '';
+    }
+  };
+
+  const getDashboardRoute = () => {
+    if (!user) return '/';
+    switch (user.role) {
+      case 'lecturer': return '/lecturer-dashboard';
+      case 'user': return '/student-dashboard';
+      case 'super_admin': return '/super-admin-dashboard';
+      default: return '/';
+    }
   };
 
   const isOnDashboard = location.pathname.includes('dashboard');
@@ -55,6 +71,9 @@ const Header: React.FC = () => {
               <nav className="hidden md:flex space-x-6">
                 <span className="text-sm text-gray-600">
                   Welcome back, <span className="font-medium">{getUserDisplayName()}</span>
+                  {user.role === 'super_admin' && (
+                    <Shield className="inline w-4 h-4 ml-1 text-red-600" />
+                  )}
                 </span>
               </nav>
             )}
@@ -67,7 +86,11 @@ const Header: React.FC = () => {
                   <Button variant="ghost" className="flex items-center space-x-2">
                     <User className="w-4 h-4" />
                     <span className="hidden md:inline">{getUserDisplayName()}</span>
-                    <span className="text-xs text-gray-500 hidden md:inline">({getUserRole()})</span>
+                    <span className={`text-xs hidden md:inline ${
+                      user.role === 'super_admin' ? 'text-red-600 font-semibold' : 'text-gray-500'
+                    }`}>
+                      ({getUserRole()})
+                    </span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
@@ -78,25 +101,18 @@ const Header: React.FC = () => {
                     {user.email}
                   </div>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate(`/${user.role}-dashboard`)}>
+                  <DropdownMenuItem onClick={() => navigate(getDashboardRoute())}>
                     <User className="w-4 h-4 mr-2" />
                     Dashboard
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => {
-                    if (user.role === 'student') {
-                      navigate('/student-dashboard');
-                      // Use a small delay to ensure navigation completes, then trigger tab change
-                      setTimeout(() => {
-                        const event = new CustomEvent('change-dashboard-tab', { detail: 'settings' });
-                        window.dispatchEvent(event);
-                      }, 100);
-                    } else {
-                      navigate('/lecturer-dashboard');
-                      setTimeout(() => {
-                        const event = new CustomEvent('change-dashboard-tab', { detail: 'settings' });
-                        window.dispatchEvent(event);
-                      }, 100);
-                    }
+                    const dashboardRoute = getDashboardRoute();
+                    navigate(dashboardRoute);
+                    // Use a small delay to ensure navigation completes, then trigger tab change
+                    setTimeout(() => {
+                      const event = new CustomEvent('change-dashboard-tab', { detail: 'settings' });
+                      window.dispatchEvent(event);
+                    }, 100);
                   }}>
                     <Settings className="w-4 h-4 mr-2" />
                     Settings

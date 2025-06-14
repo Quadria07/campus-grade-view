@@ -11,8 +11,10 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Home from "./pages/Home";
 import LecturerLogin from "./pages/LecturerLogin";
 import StudentLogin from "./pages/StudentLogin";
+import SuperAdminLogin from "./pages/SuperAdminLogin";
 import LecturerDashboard from "./pages/LecturerDashboard";
 import StudentDashboard from "./pages/StudentDashboard";
+import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 
@@ -29,6 +31,7 @@ const App = () => (
             <Route path="/" element={<Home />} />
             <Route path="/lecturer-login" element={<LecturerLogin />} />
             <Route path="/student-login" element={<StudentLogin />} />
+            <Route path="/super-admin-login" element={<SuperAdminLogin />} />
             <Route path="/contact" element={<Contact />} />
             <Route 
               path="/lecturer-dashboard" 
@@ -43,6 +46,14 @@ const App = () => (
               element={
                 <ProtectedRoute role="user">
                   <StudentDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/super-admin-dashboard" 
+              element={
+                <ProtectedRoute role="super_admin">
+                  <SuperAdminDashboard />
                 </ProtectedRoute>
               } 
             />
