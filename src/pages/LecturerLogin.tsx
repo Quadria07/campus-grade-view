@@ -31,8 +31,8 @@ const LecturerLogin: React.FC = () => {
         description: "Welcome back, Lecturer!",
       });
       navigate('/lecturer-dashboard');
-    } catch (err) {
-      setError('Invalid email or password. Please try again.');
+    } catch (err: any) {
+      setError(err.message || 'Invalid email or password. Please try again.');
       toast({
         title: "Login Failed",
         description: "Please check your credentials and try again.",
@@ -113,16 +113,9 @@ const LecturerLogin: React.FC = () => {
             </form>
 
             <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600">
-                Don't have an account?{' '}
-                <Link to="/lecturer-signup" className="text-primary hover:underline">
-                  Create one here
-                </Link>
-              </p>
-            </div>
-
-            <div className="mt-4 text-center text-sm text-gray-600">
-              Demo Credentials: Any email and password will work
+              <Button variant="link" className="text-sm text-primary">
+                Forgot Password?
+              </Button>
             </div>
           </CardContent>
         </Card>

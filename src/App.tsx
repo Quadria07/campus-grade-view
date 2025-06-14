@@ -10,7 +10,6 @@ import ProtectedRoute from "./components/ProtectedRoute";
 // Pages
 import Home from "./pages/Home";
 import LecturerLogin from "./pages/LecturerLogin";
-import LecturerSignup from "./pages/LecturerSignup";
 import StudentLogin from "./pages/StudentLogin";
 import LecturerDashboard from "./pages/LecturerDashboard";
 import StudentDashboard from "./pages/StudentDashboard";
@@ -29,7 +28,6 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/lecturer-login" element={<LecturerLogin />} />
-            <Route path="/lecturer-signup" element={<LecturerSignup />} />
             <Route path="/student-login" element={<StudentLogin />} />
             <Route path="/contact" element={<Contact />} />
             <Route 

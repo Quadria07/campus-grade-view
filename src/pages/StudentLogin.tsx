@@ -25,15 +25,15 @@ const StudentLogin: React.FC = () => {
     setLoading(true);
 
     try {
-      // For demo, we'll use matric number as email
+      // For students, we use matric number as email (will be converted to actual email in backend)
       await login(`${matricNumber}@student.edu`, password, 'student');
       toast({
         title: "Login Successful",
         description: "Welcome back, Student!",
       });
       navigate('/student-dashboard');
-    } catch (err) {
-      setError('Invalid matric number or password. Please try again.');
+    } catch (err: any) {
+      setError(err.message || 'Invalid matric number or password. Please try again.');
       toast({
         title: "Login Failed",
         description: "Please check your credentials and try again.",
@@ -117,10 +117,6 @@ const StudentLogin: React.FC = () => {
               <Button variant="link" className="text-sm text-primary">
                 Forgot Password?
               </Button>
-            </div>
-
-            <div className="mt-6 text-center text-sm text-gray-600">
-              Demo Credentials: Any matric number and password will work
             </div>
           </CardContent>
         </Card>
