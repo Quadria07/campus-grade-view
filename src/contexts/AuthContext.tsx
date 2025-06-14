@@ -97,7 +97,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const { data: lecturerProfile } = await supabase
           .from('lecturer_profiles')
           .select('*')
-          .eq('user_id', userData.id)
+          .eq('user_id', userData.user_id)
           .single();
           
         if (lecturerProfile) {
@@ -113,7 +113,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const { data: studentProfile } = await supabase
           .from('students')
           .select('*')
-          .eq('user_id', userData.id)
+          .eq('user_id', userData.user_id)
           .single();
           
         if (studentProfile) {
@@ -130,7 +130,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       const authUser: AuthUser = {
-        id: userData.id,
+        id: userData.user_id,
         email: email,
         role: userData.role as 'lecturer' | 'user' | 'super_admin',
         profile
