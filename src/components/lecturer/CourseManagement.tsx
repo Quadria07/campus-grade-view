@@ -3,92 +3,88 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { BookOpen, Plus, Pencil, FileText } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
-
-interface Course {
-  id: string;
-  code: string;
-  title: string;
-  creditUnits: number;
-  department: string;
-  level: string;
-  semester: string;
-  status: 'active' | 'inactive';
-}
+import { BookOpen, Plus, Pencil, Trash2, Search } from 'lucide-react';
+import { useCourses, useAddCourse, useUpdateCourse, useDeleteCourse, type Course } from '@/hooks/useCourses';
+import CourseForm from './CourseForm';
 
 const CourseManagement: React.FC = () => {
-  const [courses, setCourses] = useState<Course[]>([
-    {
-      id: '1',
-      code: 'CSC401',
-      title: 'Software Engineering',
-      creditUnits: 3,
-      department: 'Computer Science',
-      level: '400L',
-      semester: 'First',
-      status: 'active'
-    },
-    {
-      id: '2',
-      code: 'CSC402',
-      title: 'Database Systems',
-      creditUnits: 3,
-      department: 'Computer Science',
-      level: '400L',
-      semester: 'First',
-      status: 'active'
-    },
-    {
-      id: '3',
-      code: 'CSC403',
-      title: 'Computer Networks',
-      creditUnits: 2,
-      department: 'Computer Science',
-      level: '400L',
-      semester: 'Second',
-      status: 'active'
-    }
-  ]);
-
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [newCourse, setNewCourse] = useState({
-    code: '',
-    title: '',
-    creditUnits: 0,
-    department: '',
-    level: '',
-    semester: ''
-  });
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingCourse, setEditingCourse] = useState<Course | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const handleAddCourse = () => {
-    const course: Course = {
-      id: Date.now().toString(),
-      ...newCourse,
-      status: 'active'
-    };
-    
-    setCourses([...courses, course]);
-    setNewCourse({
-      code: '',
-      title: '',
-      creditUnits: 0,
-      department: '',
-      level: '',
-      semester: ''
-    });
-    setIsAddDialogOpen(false);
-    
-    toast({
-      title: "Course Added",
-      description: "Course has been successfully added to the system.",
-    });
+  const { data: courses = [], isLoading, error } = useCourses();
+  const addCourseMutation = useAddCourse();
+  const updateCourseMutation = useUpdateCourse();
+  const deleteCourseMutation = useDeleteCourse();
+
+  console.log('Courses data:', courses);
+  console.log('Loading:', isLoading);
+  console.log('Error:', error);
+
+  // Filter courses based on search term
+  const filteredCourses = courses.filter(course =>
+    course.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (course.department?.name || '').toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleAddCourse = async (courseData: any) => {
+    try {
+      await addCourseMutation.mutateAsync(courseData);
+      setIsAddDialogOpen(false);
+    } catch (error) {
+      console.error('Failed to add course:', error);
+    }
   };
+
+  const handleEditCourse = (course: Course) => {
+    setEditingCourse(course);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdateCourse = async (courseData: any) => {
+    if (!editingCourse) return;
+    
+    try {
+      await updateCourseMutation.mutateAsync({
+        id: editingCourse.id,
+        ...courseData
+      });
+      setIsEditDialogOpen(false);
+      setEditingCourse(null);
+    } catch (error) {
+      console.error('Failed to update course:', error);
+    }
+  };
+
+  const handleDeleteCourse = async (id: string) => {
+    if (window.confirm('Are you sure you want to delete this course? This action cannot be undone.')) {
+      try {
+        await deleteCourseMutation.mutateAsync(id);
+      } catch (error) {
+        console.error('Failed to delete course:', error);
+      }
+    }
+  };
+
+  if (error) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="text-center text-red-500">
+            <p>Error loading courses: {error.message}</p>
+            <Button onClick={() => window.location.reload()} className="mt-2">
+              Retry
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -111,144 +107,121 @@ const CourseManagement: React.FC = () => {
                   Add Course
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-md">
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Add New Course</DialogTitle>
                   <DialogDescription>
                     Enter the course details below
                   </DialogDescription>
                 </DialogHeader>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="code">Course Code</Label>
-                    <Input
-                      id="code"
-                      placeholder="CSC401"
-                      value={newCourse.code}
-                      onChange={(e) => setNewCourse({...newCourse, code: e.target.value})}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="title">Course Title</Label>
-                    <Input
-                      id="title"
-                      placeholder="Software Engineering"
-                      value={newCourse.title}
-                      onChange={(e) => setNewCourse({...newCourse, title: e.target.value})}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="creditUnits">Credit Units</Label>
-                    <Input
-                      id="creditUnits"
-                      type="number"
-                      placeholder="3"
-                      value={newCourse.creditUnits || ''}
-                      onChange={(e) => setNewCourse({...newCourse, creditUnits: parseInt(e.target.value)})}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="department">Department</Label>
-                    <Select onValueChange={(value) => setNewCourse({...newCourse, department: value})}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select department" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Computer Science">Computer Science</SelectItem>
-                        <SelectItem value="Mathematics">Mathematics</SelectItem>
-                        <SelectItem value="Physics">Physics</SelectItem>
-                        <SelectItem value="Chemistry">Chemistry</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="level">Level</Label>
-                    <Select onValueChange={(value) => setNewCourse({...newCourse, level: value})}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select level" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="100L">100 Level</SelectItem>
-                        <SelectItem value="200L">200 Level</SelectItem>
-                        <SelectItem value="300L">300 Level</SelectItem>
-                        <SelectItem value="400L">400 Level</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="semester">Semester</Label>
-                    <Select onValueChange={(value) => setNewCourse({...newCourse, semester: value})}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select semester" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="First">First Semester</SelectItem>
-                        <SelectItem value="Second">Second Semester</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button onClick={handleAddCourse}>Add Course</Button>
-                </DialogFooter>
+                <CourseForm
+                  onSubmit={handleAddCourse}
+                  onCancel={() => setIsAddDialogOpen(false)}
+                  isLoading={addCourseMutation.isPending}
+                />
               </DialogContent>
             </Dialog>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="mb-4">
+          <div className="mb-4 flex items-center space-x-2">
+            <Search className="w-4 h-4 text-gray-400" />
             <Input
-              placeholder="Search courses by code or title..."
+              placeholder="Search courses by code, title, or department..."
               className="max-w-sm"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
           
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Course Code</TableHead>
-                <TableHead>Title</TableHead>
-                <TableHead>Credit Units</TableHead>
-                <TableHead>Department</TableHead>
-                <TableHead>Level</TableHead>
-                <TableHead>Semester</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {courses.map((course) => (
-                <TableRow key={course.id}>
-                  <TableCell className="font-medium">{course.code}</TableCell>
-                  <TableCell>{course.title}</TableCell>
-                  <TableCell>{course.creditUnits}</TableCell>
-                  <TableCell>{course.department}</TableCell>
-                  <TableCell>{course.level}</TableCell>
-                  <TableCell>{course.semester}</TableCell>
-                  <TableCell>
-                    <Badge variant={course.status === 'active' ? 'default' : 'secondary'}>
-                      {course.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex space-x-2">
-                      <Button size="sm" variant="outline">
-                        <Pencil className="w-3 h-3" />
-                      </Button>
-                      <Button size="sm" variant="outline">
-                        <FileText className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          {isLoading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+              <p className="mt-2 text-gray-500">Loading courses...</p>
+            </div>
+          ) : (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Course Code</TableHead>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Credit Units</TableHead>
+                    <TableHead>Department</TableHead>
+                    <TableHead>Level</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredCourses.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                        {searchTerm ? 'No courses found matching your search.' : 'No courses added yet.'}
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredCourses.map((course) => (
+                      <TableRow key={course.id}>
+                        <TableCell className="font-medium">{course.code}</TableCell>
+                        <TableCell>{course.name}</TableCell>
+                        <TableCell>{course.units}</TableCell>
+                        <TableCell>{course.department?.name || 'Not assigned'}</TableCell>
+                        <TableCell>
+                          <Badge variant="secondary">
+                            {course.level}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex space-x-2">
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleEditCourse(course)}
+                            >
+                              <Pencil className="w-3 h-3" />
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleDeleteCourse(course.id)}
+                              disabled={deleteCourseMutation.isPending}
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
+
+      {/* Edit Course Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Course</DialogTitle>
+            <DialogDescription>
+              Update the course details below
+            </DialogDescription>
+          </DialogHeader>
+          {editingCourse && (
+            <CourseForm
+              course={editingCourse}
+              onSubmit={handleUpdateCourse}
+              onCancel={() => {
+                setIsEditDialogOpen(false);
+                setEditingCourse(null);
+              }}
+              isLoading={updateCourseMutation.isPending}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
