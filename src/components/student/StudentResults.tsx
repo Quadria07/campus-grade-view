@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { FileText, Download, Printer, Search, Filter } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { generateResultPDF, downloadResultAsPDF } from '../../utils/pdfGenerator';
 
 interface StudentResult {
   id: string;
@@ -135,70 +135,39 @@ const StudentResults: React.FC = () => {
   };
 
   const handleDownloadPDF = () => {
-    toast({
-      title: "Download Started",
-      description: "Your result slip PDF is being prepared for download.",
-    });
+    const studentInfo = {
+      name: 'Demo Student',
+      matricNumber: 'STU001',
+      department: 'Computer Science',
+      level: '400',
+      session: selectedSession === 'all' ? '2023/2024' : selectedSession,
+      semester: selectedSemester === 'all' ? 'First' : selectedSemester
+    };
+
+    downloadResultAsPDF(
+      studentInfo,
+      filteredResults,
+      calculateCGPA(),
+      calculateSemesterGPA(filteredResults)
+    );
   };
 
   const handlePrintResults = () => {
-    const printWindow = window.open('', '_blank');
-    if (printWindow) {
-      printWindow.document.write(`
-        <html>
-          <head>
-            <title>Student Results - ${selectedSession || 'All Sessions'}</title>
-            <style>
-              body { font-family: Arial, sans-serif; margin: 20px; }
-              table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-              th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-              th { background-color: #f2f2f2; }
-              .header { text-align: center; margin-bottom: 20px; }
-              .summary { margin-bottom: 20px; }
-            </style>
-          </head>
-          <body>
-            <div class="header">
-              <h1>Student Academic Results</h1>
-              <p>Session: ${selectedSession === 'all' ? 'All Sessions' : selectedSession}</p>
-              <p>Semester: ${selectedSemester === 'all' ? 'All Semesters' : selectedSemester}</p>
-            </div>
-            <div class="summary">
-              <p><strong>CGPA:</strong> ${calculateCGPA()}</p>
-              <p><strong>Total Credits:</strong> ${filteredResults.reduce((sum, result) => sum + result.creditUnits, 0)}</p>
-            </div>
-            <table>
-              <thead>
-                <tr>
-                  <th>Course Code</th>
-                  <th>Course Title</th>
-                  <th>Credit Units</th>
-                  <th>Score</th>
-                  <th>Grade</th>
-                  <th>Grade Point</th>
-                  <th>Remark</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${filteredResults.map(result => `
-                  <tr>
-                    <td>${result.courseCode}</td>
-                    <td>${result.courseTitle}</td>
-                    <td>${result.creditUnits}</td>
-                    <td>${result.score}</td>
-                    <td>${result.grade}</td>
-                    <td>${result.gradePoint}</td>
-                    <td>${result.remark}</td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-          </body>
-        </html>
-      `);
-      printWindow.document.close();
-      printWindow.print();
-    }
+    const studentInfo = {
+      name: 'Demo Student',
+      matricNumber: 'STU001',
+      department: 'Computer Science',
+      level: '400',
+      session: selectedSession === 'all' ? '2023/2024' : selectedSession,
+      semester: selectedSemester === 'all' ? 'First' : selectedSemester
+    };
+
+    generateResultPDF(
+      studentInfo,
+      filteredResults,
+      calculateCGPA(),
+      calculateSemesterGPA(filteredResults)
+    );
   };
 
   const sessions = [...new Set(results.map(result => result.session))];

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -83,7 +82,22 @@ const Header: React.FC = () => {
                     <User className="w-4 h-4 mr-2" />
                     Dashboard
                   </DropdownMenuItem>
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => {
+                    if (user.role === 'student') {
+                      navigate('/student-dashboard');
+                      // Use a small delay to ensure navigation completes, then trigger tab change
+                      setTimeout(() => {
+                        const event = new CustomEvent('change-dashboard-tab', { detail: 'settings' });
+                        window.dispatchEvent(event);
+                      }, 100);
+                    } else {
+                      navigate('/lecturer-dashboard');
+                      setTimeout(() => {
+                        const event = new CustomEvent('change-dashboard-tab', { detail: 'settings' });
+                        window.dispatchEvent(event);
+                      }, 100);
+                    }
+                  }}>
                     <Settings className="w-4 h-4 mr-2" />
                     Settings
                   </DropdownMenuItem>

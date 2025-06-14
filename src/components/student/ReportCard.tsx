@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { FileText, Download, Printer } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { generateResultPDF, downloadResultAsPDF } from '../../utils/pdfGenerator';
 
 interface StudentResult {
   id: string;
@@ -91,14 +91,39 @@ const ReportCard: React.FC = () => {
   };
 
   const handleDownloadReportCard = () => {
-    toast({
-      title: "Download Started",
-      description: "Your report card is being prepared for download.",
-    });
+    const studentInfo = {
+      name: 'Demo Student',
+      matricNumber: 'STU001',
+      department: 'Computer Science',
+      level: '200',
+      session: selectedSession,
+      semester: selectedSemester
+    };
+
+    downloadResultAsPDF(
+      studentInfo,
+      filteredResults,
+      calculateCGPA(),
+      calculateGPA()
+    );
   };
 
   const handlePrintReportCard = () => {
-    window.print();
+    const studentInfo = {
+      name: 'Demo Student',
+      matricNumber: 'STU001',
+      department: 'Computer Science',
+      level: '200',
+      session: selectedSession,
+      semester: selectedSemester
+    };
+
+    generateResultPDF(
+      studentInfo,
+      filteredResults,
+      calculateCGPA(),
+      calculateGPA()
+    );
   };
 
   const sessions = [...new Set(results.map(result => result.session))];
