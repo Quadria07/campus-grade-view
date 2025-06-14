@@ -17,6 +17,7 @@ export type Database = {
           id: string
           level: string
           name: string
+          semester_id: string | null
           units: number
         }
         Insert: {
@@ -26,6 +27,7 @@ export type Database = {
           id?: string
           level: string
           name: string
+          semester_id?: string | null
           units?: number
         }
         Update: {
@@ -35,6 +37,7 @@ export type Database = {
           id?: string
           level?: string
           name?: string
+          semester_id?: string | null
           units?: number
         }
         Relationships: [
@@ -45,9 +48,37 @@ export type Database = {
             referencedRelation: "departments"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "courses_semester_id_fkey"
+            columns: ["semester_id"]
+            isOneToOne: false
+            referencedRelation: "semesters"
+            referencedColumns: ["id"]
+          },
         ]
       }
       departments: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      semesters: {
         Row: {
           code: string
           created_at: string
@@ -155,6 +186,7 @@ export type Database = {
           level: string
           matric_number: string
           phone: string | null
+          semester_id: string | null
           session_id: string | null
           status: string
           updated_at: string
@@ -172,6 +204,7 @@ export type Database = {
           level: string
           matric_number: string
           phone?: string | null
+          semester_id?: string | null
           session_id?: string | null
           status?: string
           updated_at?: string
@@ -189,6 +222,7 @@ export type Database = {
           level?: string
           matric_number?: string
           phone?: string | null
+          semester_id?: string | null
           session_id?: string | null
           status?: string
           updated_at?: string
@@ -199,6 +233,13 @@ export type Database = {
             columns: ["department_id"]
             isOneToOne: false
             referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "students_semester_id_fkey"
+            columns: ["semester_id"]
+            isOneToOne: false
+            referencedRelation: "semesters"
             referencedColumns: ["id"]
           },
           {

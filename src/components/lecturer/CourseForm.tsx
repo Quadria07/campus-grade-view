@@ -3,15 +3,15 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage, Form } from '@/components/ui/form';
-import { useDepartments, type Course } from '@/hooks/useCourses';
+import { useDepartments, useSemesters, type Course } from '@/hooks/useCourses';
 
 interface CourseFormData {
   name: string;
   code: string;
   department_id: string;
+  semester_id: string;
   level: string;
   units: number;
 }
@@ -30,12 +30,14 @@ const CourseForm: React.FC<CourseFormProps> = ({
   isLoading = false
 }) => {
   const { data: departments = [] } = useDepartments();
+  const { data: semesters = [] } = useSemesters();
   
   const form = useForm<CourseFormData>({
     defaultValues: {
       name: course?.name || '',
       code: course?.code || '',
       department_id: course?.department_id || '',
+      semester_id: course?.semester_id || '',
       level: course?.level || '',
       units: course?.units || 3,
     },
@@ -119,6 +121,31 @@ const CourseForm: React.FC<CourseFormProps> = ({
                   {departments.map((department) => (
                     <SelectItem key={department.id} value={department.id}>
                       {department.name} ({department.code})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="semester_id"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Semester</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select semester" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {semesters.map((semester) => (
+                    <SelectItem key={semester.id} value={semester.id}>
+                      {semester.name} ({semester.code})
                     </SelectItem>
                   ))}
                 </SelectContent>

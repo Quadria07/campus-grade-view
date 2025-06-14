@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -6,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DialogFooter } from '@/components/ui/dialog';
-import { useDepartments, useSessions, type Student } from '@/hooks/useStudents';
+import { useDepartments, useSessions, useSemesters, type Student } from '@/hooks/useStudents';
 
 interface StudentFormProps {
   student?: Student;
@@ -18,6 +17,7 @@ interface StudentFormProps {
 const StudentForm: React.FC<StudentFormProps> = ({ student, onSubmit, onCancel, isLoading }) => {
   const { data: departments = [] } = useDepartments();
   const { data: sessions = [] } = useSessions();
+  const { data: semesters = [] } = useSemesters();
 
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     defaultValues: {
@@ -30,6 +30,7 @@ const StudentForm: React.FC<StudentFormProps> = ({ student, onSubmit, onCancel, 
       status: student?.status || 'active',
       department_id: student?.department_id || '',
       session_id: student?.session_id || '',
+      semester_id: student?.semester_id || '',
       gender: student?.gender || '',
       date_of_birth: student?.date_of_birth || '',
       address: student?.address || '',
@@ -124,7 +125,7 @@ const StudentForm: React.FC<StudentFormProps> = ({ student, onSubmit, onCancel, 
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-3 gap-4">
         <div className="space-y-2">
           <Label htmlFor="department">Department</Label>
           <Select onValueChange={(value) => setValue('department_id', value)} defaultValue={student?.department_id}>
@@ -151,6 +152,22 @@ const StudentForm: React.FC<StudentFormProps> = ({ student, onSubmit, onCancel, 
               {sessions.map((session) => (
                 <SelectItem key={session.id} value={session.id}>
                   {session.name} {session.is_active && '(Active)'}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="semester">Semester</Label>
+          <Select onValueChange={(value) => setValue('semester_id', value)} defaultValue={student?.semester_id}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select semester" />
+            </SelectTrigger>
+            <SelectContent>
+              {semesters.map((semester) => (
+                <SelectItem key={semester.id} value={semester.id}>
+                  {semester.name} ({semester.code})
                 </SelectItem>
               ))}
             </SelectContent>

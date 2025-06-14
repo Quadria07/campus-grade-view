@@ -8,10 +8,16 @@ export interface Course {
   name: string;
   code: string;
   department_id: string | null;
+  semester_id: string | null;
   level: string;
   units: number;
   created_at: string;
   department?: {
+    id: string;
+    name: string;
+    code: string;
+  };
+  semester?: {
     id: string;
     name: string;
     code: string;
@@ -27,7 +33,8 @@ export const useCourses = () => {
         .from('courses')
         .select(`
           *,
-          department:departments(id, name, code)
+          department:departments(id, name, code),
+          semester:semesters(id, name, code)
         `)
         .order('code');
 
@@ -164,6 +171,25 @@ export const useDepartments = () => {
 
       if (error) {
         console.error('Error fetching departments:', error);
+        throw error;
+      }
+
+      return data;
+    },
+  });
+};
+
+export const useSemesters = () => {
+  return useQuery({
+    queryKey: ['semesters'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('semesters')
+        .select('*')
+        .order('name');
+
+      if (error) {
+        console.error('Error fetching semesters:', error);
         throw error;
       }
 

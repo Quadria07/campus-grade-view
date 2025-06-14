@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -17,10 +16,12 @@ export interface Student {
   address?: string;
   department_id?: string;
   session_id?: string;
+  semester_id?: string;
   created_at: string;
   updated_at: string;
   department?: { name: string; code: string };
   session?: { name: string };
+  semester?: { name: string; code: string };
 }
 
 export interface Department {
@@ -35,6 +36,12 @@ export interface Session {
   is_active: boolean;
 }
 
+export interface Semester {
+  id: string;
+  name: string;
+  code: string;
+}
+
 export const useStudents = () => {
   return useQuery({
     queryKey: ['students'],
@@ -45,7 +52,8 @@ export const useStudents = () => {
         .select(`
           *,
           department:departments(name, code),
-          session:sessions(name)
+          session:sessions(name),
+          semester:semesters(name, code)
         `)
         .order('created_at', { ascending: false });
 
@@ -86,6 +94,21 @@ export const useSessions = () => {
 
       if (error) throw error;
       return data as Session[];
+    },
+  });
+};
+
+export const useSemesters = () => {
+  return useQuery({
+    queryKey: ['semesters'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('semesters')
+        .select('*')
+        .order('name');
+
+      if (error) throw error;
+      return data as Semester[];
     },
   });
 };

@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { BookOpen, Plus, Pencil, Trash2, Search } from 'lucide-react';
@@ -29,7 +29,8 @@ const CourseManagement: React.FC = () => {
   const filteredCourses = courses.filter(course =>
     course.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
     course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (course.department?.name || '').toLowerCase().includes(searchTerm.toLowerCase())
+    (course.department?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (course.semester?.name || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleAddCourse = async (courseData: any) => {
@@ -97,7 +98,7 @@ const CourseManagement: React.FC = () => {
                 Course Management
               </CardTitle>
               <CardDescription>
-                Manage course catalog, add new courses, and assign to departments
+                Manage course catalog, add new courses, and assign to departments and semesters
               </CardDescription>
             </div>
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
@@ -127,7 +128,7 @@ const CourseManagement: React.FC = () => {
           <div className="mb-4 flex items-center space-x-2">
             <Search className="w-4 h-4 text-gray-400" />
             <Input
-              placeholder="Search courses by code, title, or department..."
+              placeholder="Search courses by code, title, department, or semester..."
               className="max-w-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -148,6 +149,7 @@ const CourseManagement: React.FC = () => {
                     <TableHead>Title</TableHead>
                     <TableHead>Credit Units</TableHead>
                     <TableHead>Department</TableHead>
+                    <TableHead>Semester</TableHead>
                     <TableHead>Level</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
@@ -155,7 +157,7 @@ const CourseManagement: React.FC = () => {
                 <TableBody>
                   {filteredCourses.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                      <TableCell colSpan={7} className="text-center py-8 text-gray-500">
                         {searchTerm ? 'No courses found matching your search.' : 'No courses added yet.'}
                       </TableCell>
                     </TableRow>
@@ -166,6 +168,7 @@ const CourseManagement: React.FC = () => {
                         <TableCell>{course.name}</TableCell>
                         <TableCell>{course.units}</TableCell>
                         <TableCell>{course.department?.name || 'Not assigned'}</TableCell>
+                        <TableCell>{course.semester?.name || 'Not assigned'}</TableCell>
                         <TableCell>
                           <Badge variant="secondary">
                             {course.level}
