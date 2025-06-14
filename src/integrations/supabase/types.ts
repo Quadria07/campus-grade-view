@@ -373,6 +373,38 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       users: {
         Row: {
           created_at: string
@@ -380,7 +412,7 @@ export type Database = {
           id: string
           is_active: boolean
           password_hash: string
-          role: string
+          role: Database["public"]["Enums"]["app_role"]
           updated_at: string
         }
         Insert: {
@@ -389,7 +421,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           password_hash: string
-          role: string
+          role: Database["public"]["Enums"]["app_role"]
           updated_at?: string
         }
         Update: {
@@ -398,7 +430,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           password_hash?: string
-          role?: string
+          role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
         }
         Relationships: []
@@ -412,9 +444,29 @@ export type Database = {
         Args: { score: number }
         Returns: string
       }
+      create_super_admin: {
+        Args: {
+          p_email: string
+          p_password: string
+          p_first_name: string
+          p_last_name: string
+        }
+        Returns: string
+      }
       create_user_with_password: {
         Args: { p_email: string; p_password: string; p_role: string }
         Returns: string
+      }
+      get_user_roles: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["app_role"][]
+      }
+      has_role: {
+        Args: {
+          _user_id: string
+          _role: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: boolean
       }
       update_user_password: {
         Args: { p_user_id: string; p_new_password: string }
@@ -429,7 +481,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "user" | "lecturer" | "super_admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -544,6 +596,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["user", "lecturer", "super_admin"],
+    },
   },
 } as const

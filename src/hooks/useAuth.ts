@@ -7,7 +7,7 @@ import { toast } from '@/hooks/use-toast';
 export interface User {
   id: string;
   email: string;
-  role: 'student' | 'lecturer';
+  role: 'user' | 'lecturer' | 'super_admin';
 }
 
 export const useAuth = () => {
@@ -46,7 +46,7 @@ export const useAuth = () => {
       const user: User = {
         id: userData.user_id,
         email: email,
-        role: userData.role as 'student' | 'lecturer'
+        role: userData.role as 'user' | 'lecturer' | 'super_admin'
       };
 
       setUser(user);
@@ -78,7 +78,7 @@ export const useAuth = () => {
     });
   };
 
-  const signup = async (email: string, password: string, role: 'student' | 'lecturer', additionalData?: any) => {
+  const signup = async (email: string, password: string, role: 'user' | 'lecturer' | 'super_admin', additionalData?: any) => {
     try {
       console.log('Attempting signup with:', email, role);
       
@@ -111,7 +111,7 @@ export const useAuth = () => {
           console.error('Profile creation error:', profileError);
           throw profileError;
         }
-      } else if (role === 'student' && additionalData) {
+      } else if (role === 'user' && additionalData) {
         const { error: profileError } = await supabase
           .from('students')
           .insert({
@@ -129,6 +129,19 @@ export const useAuth = () => {
           console.error('Profile creation error:', profileError);
           throw profileError;
         }
+      }
+
+      // Create role assignment in user_roles table
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .insert({
+          user_id: userId,
+          role: role
+        });
+
+      if (roleError) {
+        console.error('Role assignment error:', roleError);
+        throw roleError;
       }
 
       toast({
@@ -314,7 +327,54 @@ export const useCreateLecturerAccount = () => {
 
       if (profileError) throw profileError;
 
+      // Create role assignment
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .insert({
+          user_id: userId,
+          role: 'lecturer'
+        });
+
+      if (roleError) throw roleError;
+
       return userId;
     },
+  });
+};
+
+// Hook to check if user has specific role
+export const useUserRole = (userId?: string, role?: 'user' | 'lecturer' | 'super_admin') => {
+  return useQuery({
+    queryKey: ['user-role', userId, role],
+    queryFn: async () => {
+      if (!userId || !role) return false;
+      
+      const { data, error } = await supabase.rpc('has_role', {
+        _user_id: userId,
+        _role: role
+      });
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!userId && !!role,
+  });
+};
+
+// Hook to get all user roles
+export const useUserRoles = (userId?: string) => {
+  return useQuery({
+    queryKey: ['user-roles', userId],
+    queryFn: async () => {
+      if (!userId) return [];
+      
+      const { data, error } = await supabase.rpc('get_user_roles', {
+        _user_id: userId
+      });
+
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!userId,
   });
 };
