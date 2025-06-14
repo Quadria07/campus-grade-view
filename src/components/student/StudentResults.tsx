@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -5,102 +6,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { FileText, Download, Printer, Search, Filter } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { FileText, Download, Printer, Search, Filter, Loader2 } from 'lucide-react';
 import { generateResultPDF, downloadResultAsPDF } from '../../utils/pdfGenerator';
-
-interface StudentResult {
-  id: string;
-  courseCode: string;
-  courseTitle: string;
-  creditUnits: number;
-  score: number;
-  grade: string;
-  gradePoint: number;
-  semester: string;
-  session: string;
-  remark: string;
-}
+import { useStudentResults, useStudentProfile } from '../../hooks/useStudentResults';
 
 const StudentResults: React.FC = () => {
-  const [results] = useState<StudentResult[]>([
-    {
-      id: '1',
-      courseCode: 'CSC401',
-      courseTitle: 'Software Engineering',
-      creditUnits: 3,
-      score: 78,
-      grade: 'B+',
-      gradePoint: 3.5,
-      semester: 'First',
-      session: '2023/2024',
-      remark: 'Pass'
-    },
-    {
-      id: '2',
-      courseCode: 'CSC402',
-      courseTitle: 'Database Systems',
-      creditUnits: 3,
-      score: 85,
-      grade: 'A',
-      gradePoint: 4.0,
-      semester: 'First',
-      session: '2023/2024',
-      remark: 'Excellent'
-    },
-    {
-      id: '3',
-      courseCode: 'CSC403',
-      courseTitle: 'Computer Networks',
-      creditUnits: 2,
-      score: 72,
-      grade: 'B',
-      gradePoint: 3.0,
-      semester: 'First',
-      session: '2023/2024',
-      remark: 'Pass'
-    },
-    {
-      id: '4',
-      courseCode: 'CSC404',
-      courseTitle: 'Web Development',
-      creditUnits: 3,
-      score: 88,
-      grade: 'A',
-      gradePoint: 4.0,
-      semester: 'Second',
-      session: '2022/2023',
-      remark: 'Excellent'
-    },
-    {
-      id: '5',
-      courseCode: 'CSC301',
-      courseTitle: 'Data Structures',
-      creditUnits: 3,
-      score: 68,
-      grade: 'B-',
-      gradePoint: 2.5,
-      semester: 'First',
-      session: '2022/2023',
-      remark: 'Pass'
-    },
-    {
-      id: '6',
-      courseCode: 'MTH201',
-      courseTitle: 'Linear Algebra',
-      creditUnits: 3,
-      score: 92,
-      grade: 'A',
-      gradePoint: 4.0,
-      semester: 'Second',
-      session: '2023/2024',
-      remark: 'Excellent'
-    }
-  ]);
-
   const [selectedSession, setSelectedSession] = useState('all');
   const [selectedSemester, setSelectedSemester] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+
+  const { data: results = [], isLoading: resultsLoading, error: resultsError } = useStudentResults();
+  const { data: studentProfile, isLoading: profileLoading } = useStudentProfile();
 
   const filteredResults = results.filter(result => {
     const matchesSession = selectedSession === 'all' || result.session === selectedSession;
@@ -112,14 +28,14 @@ const StudentResults: React.FC = () => {
     return matchesSession && matchesSemester && matchesSearch;
   });
 
-  const calculateSemesterGPA = (semesterResults: StudentResult[]): string => {
+  const calculateSemesterGPA = (semesterResults: typeof results): string => {
     if (semesterResults.length === 0) return '0.00';
     const totalPoints = semesterResults.reduce((sum, result) => sum + (result.gradePoint * result.creditUnits), 0);
     const totalCredits = semesterResults.reduce((sum, result) => sum + result.creditUnits, 0);
     return totalCredits > 0 ? (totalPoints / totalCredits).toFixed(2) : '0.00';
   };
 
-  const calculateCGPA = () => {
+  const calculateCGPA = (): string => {
     if (results.length === 0) return '0.00';
     const totalPoints = results.reduce((sum, result) => sum + (result.gradePoint * result.creditUnits), 0);
     const totalCredits = results.reduce((sum, result) => sum + result.creditUnits, 0);
@@ -135,13 +51,15 @@ const StudentResults: React.FC = () => {
   };
 
   const handleDownloadPDF = () => {
+    if (!studentProfile) return;
+
     const studentInfo = {
-      name: 'Demo Student',
-      matricNumber: 'STU001',
-      department: 'Computer Science',
-      level: '400',
+      name: `${studentProfile.first_name} ${studentProfile.last_name}`,
+      matricNumber: studentProfile.matric_number,
+      department: studentProfile.department?.name || 'N/A',
+      level: studentProfile.level,
       session: selectedSession === 'all' ? '2023/2024' : selectedSession,
-      semester: selectedSemester === 'all' ? 'First' : selectedSemester
+      semester: selectedSemester === 'all' ? 'All Semesters' : selectedSemester
     };
 
     downloadResultAsPDF(
@@ -153,13 +71,15 @@ const StudentResults: React.FC = () => {
   };
 
   const handlePrintResults = () => {
+    if (!studentProfile) return;
+
     const studentInfo = {
-      name: 'Demo Student',
-      matricNumber: 'STU001',
-      department: 'Computer Science',
-      level: '400',
+      name: `${studentProfile.first_name} ${studentProfile.last_name}`,
+      matricNumber: studentProfile.matric_number,
+      department: studentProfile.department?.name || 'N/A',
+      level: studentProfile.level,
       session: selectedSession === 'all' ? '2023/2024' : selectedSession,
-      semester: selectedSemester === 'all' ? 'First' : selectedSemester
+      semester: selectedSemester === 'all' ? 'All Semesters' : selectedSemester
     };
 
     generateResultPDF(
@@ -172,6 +92,23 @@ const StudentResults: React.FC = () => {
 
   const sessions = [...new Set(results.map(result => result.session))];
   const semesters = [...new Set(results.map(result => result.semester))];
+
+  if (resultsLoading || profileLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="w-8 h-8 animate-spin" />
+        <span className="ml-2">Loading results...</span>
+      </div>
+    );
+  }
+
+  if (resultsError) {
+    return (
+      <div className="text-center py-8 text-red-500">
+        Error loading results. Please try again.
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -188,11 +125,11 @@ const StudentResults: React.FC = () => {
               </CardDescription>
             </div>
             <div className="flex space-x-2">
-              <Button onClick={handlePrintResults} variant="outline">
+              <Button onClick={handlePrintResults} variant="outline" disabled={!studentProfile}>
                 <Printer className="w-4 h-4 mr-2" />
                 Print Results
               </Button>
-              <Button onClick={handleDownloadPDF}>
+              <Button onClick={handleDownloadPDF} disabled={!studentProfile}>
                 <Download className="w-4 h-4 mr-2" />
                 Download PDF
               </Button>
@@ -265,7 +202,7 @@ const StudentResults: React.FC = () => {
               <SelectContent>
                 <SelectItem value="all">All Semesters</SelectItem>
                 {semesters.map(semester => (
-                  <SelectItem key={semester} value={semester}>{semester} Semester</SelectItem>
+                  <SelectItem key={semester} value={semester}>{semester}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -303,7 +240,7 @@ const StudentResults: React.FC = () => {
                     <TableCell>{result.semester}</TableCell>
                     <TableCell>{result.session}</TableCell>
                     <TableCell>
-                      <Badge variant={result.remark === 'Excellent' ? 'default' : 'secondary'}>
+                      <Badge variant={result.remark === 'Excellent work' ? 'default' : 'secondary'}>
                         {result.remark}
                       </Badge>
                     </TableCell>
@@ -313,7 +250,7 @@ const StudentResults: React.FC = () => {
             </Table>
           </div>
 
-          {filteredResults.length === 0 && (
+          {filteredResults.length === 0 && !resultsLoading && (
             <div className="text-center py-8 text-gray-500">
               No results found for the selected filters.
             </div>
