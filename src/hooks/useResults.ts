@@ -81,7 +81,7 @@ export const useAddResult = () => {
       console.log('Adding result:', resultData);
       const { data, error } = await supabase
         .from('results')
-        .insert([resultData])
+        .insert([{ ...resultData, grade: 'F' }]) // Temporary grade, will be overwritten by trigger
         .select()
         .single();
 
@@ -190,9 +190,12 @@ export const useBulkAddResults = () => {
   return useMutation({
     mutationFn: async (results: CreateResultData[]) => {
       console.log('Adding bulk results:', results);
+      // Add temporary grade field for each result - will be overwritten by trigger
+      const resultsWithGrade = results.map(result => ({ ...result, grade: 'F' }));
+      
       const { data, error } = await supabase
         .from('results')
-        .insert(results)
+        .insert(resultsWithGrade)
         .select();
 
       if (error) {
