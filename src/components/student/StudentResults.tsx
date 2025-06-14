@@ -112,8 +112,8 @@ const StudentResults: React.FC = () => {
     return matchesSession && matchesSemester && matchesSearch;
   });
 
-  const calculateSemesterGPA = (semesterResults: StudentResult[]) => {
-    if (semesterResults.length === 0) return 0;
+  const calculateSemesterGPA = (semesterResults: StudentResult[]): string => {
+    if (semesterResults.length === 0) return '0.00';
     const totalPoints = semesterResults.reduce((sum, result) => sum + (result.gradePoint * result.creditUnits), 0);
     const totalCredits = semesterResults.reduce((sum, result) => sum + result.creditUnits, 0);
     return totalCredits > 0 ? (totalPoints / totalCredits).toFixed(2) : '0.00';
