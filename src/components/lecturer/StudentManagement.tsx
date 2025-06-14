@@ -3,99 +3,96 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Users, Plus, Upload, Pencil, FileText } from 'lucide-react';
+import { Users, Plus, Upload, Pencil, Trash2, Search } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-
-interface Student {
-  id: string;
-  matricNumber: string;
-  name: string;
-  email: string;
-  department: string;
-  level: string;
-  phone: string;
-  status: 'active' | 'inactive';
-}
+import { useStudents, useAddStudent, useUpdateStudent, useDeleteStudent, type Student } from '@/hooks/useStudents';
+import StudentForm from './StudentForm';
 
 const StudentManagement: React.FC = () => {
-  const [students, setStudents] = useState<Student[]>([
-    {
-      id: '1',
-      matricNumber: 'CSC/2020/001',
-      name: 'John Doe',
-      email: 'john.doe@student.edu',
-      department: 'Computer Science',
-      level: '400L',
-      phone: '+234 901 234 5678',
-      status: 'active'
-    },
-    {
-      id: '2',
-      matricNumber: 'CSC/2020/002',
-      name: 'Jane Smith',
-      email: 'jane.smith@student.edu',
-      department: 'Computer Science',
-      level: '400L',
-      phone: '+234 902 345 6789',
-      status: 'active'
-    },
-    {
-      id: '3',
-      matricNumber: 'CSC/2020/003',
-      name: 'Mike Johnson',
-      email: 'mike.johnson@student.edu',
-      department: 'Computer Science',
-      level: '300L',
-      phone: '+234 903 456 7890',
-      status: 'inactive'
-    }
-  ]);
-
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [newStudent, setNewStudent] = useState({
-    matricNumber: '',
-    name: '',
-    email: '',
-    department: '',
-    level: '',
-    phone: ''
-  });
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingStudent, setEditingStudent] = useState<Student | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const handleAddStudent = () => {
-    const student: Student = {
-      id: Date.now().toString(),
-      ...newStudent,
-      status: 'active'
-    };
+  const { data: students = [], isLoading, error } = useStudents();
+  const addStudentMutation = useAddStudent();
+  const updateStudentMutation = useUpdateStudent();
+  const deleteStudentMutation = useDeleteStudent();
+
+  console.log('Students data:', students);
+  console.log('Loading:', isLoading);
+  console.log('Error:', error);
+
+  // Filter students based on search term
+  const filteredStudents = students.filter(student =>
+    student.matric_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    `${student.first_name} ${student.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    student.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleAddStudent = async (studentData: any) => {
+    try {
+      await addStudentMutation.mutateAsync(studentData);
+      setIsAddDialogOpen(false);
+    } catch (error) {
+      console.error('Failed to add student:', error);
+    }
+  };
+
+  const handleEditStudent = (student: Student) => {
+    setEditingStudent(student);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdateStudent = async (studentData: any) => {
+    if (!editingStudent) return;
     
-    setStudents([...students, student]);
-    setNewStudent({
-      matricNumber: '',
-      name: '',
-      email: '',
-      department: '',
-      level: '',
-      phone: ''
-    });
-    setIsAddDialogOpen(false);
-    
-    toast({
-      title: "Student Added",
-      description: "Student has been successfully added to the system.",
-    });
+    try {
+      await updateStudentMutation.mutateAsync({
+        id: editingStudent.id,
+        ...studentData
+      });
+      setIsEditDialogOpen(false);
+      setEditingStudent(null);
+    } catch (error) {
+      console.error('Failed to update student:', error);
+    }
+  };
+
+  const handleDeleteStudent = async (id: string) => {
+    if (window.confirm('Are you sure you want to delete this student? This action cannot be undone.')) {
+      try {
+        await deleteStudentMutation.mutateAsync(id);
+      } catch (error) {
+        console.error('Failed to delete student:', error);
+      }
+    }
   };
 
   const handleBulkUpload = () => {
     toast({
       title: "Bulk Upload",
-      description: "CSV upload functionality would be implemented here.",
+      description: "CSV upload functionality will be implemented soon.",
     });
   };
+
+  if (error) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="text-center text-red-500">
+            <p>Error loading students: {error.message}</p>
+            <Button onClick={() => window.location.reload()} className="mt-2">
+              Retry
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -123,138 +120,129 @@ const StudentManagement: React.FC = () => {
                     Add Student
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-md">
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>Add New Student</DialogTitle>
                     <DialogDescription>
                       Enter the student details below
                     </DialogDescription>
                   </DialogHeader>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="matricNumber">Matric Number</Label>
-                      <Input
-                        id="matricNumber"
-                        placeholder="CSC/2024/001"
-                        value={newStudent.matricNumber}
-                        onChange={(e) => setNewStudent({...newStudent, matricNumber: e.target.value})}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Full Name</Label>
-                      <Input
-                        id="name"
-                        placeholder="John Doe"
-                        value={newStudent.name}
-                        onChange={(e) => setNewStudent({...newStudent, name: e.target.value})}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="john@student.edu"
-                        value={newStudent.email}
-                        onChange={(e) => setNewStudent({...newStudent, email: e.target.value})}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="department">Department</Label>
-                      <Select onValueChange={(value) => setNewStudent({...newStudent, department: value})}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select department" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Computer Science">Computer Science</SelectItem>
-                          <SelectItem value="Mathematics">Mathematics</SelectItem>
-                          <SelectItem value="Physics">Physics</SelectItem>
-                          <SelectItem value="Chemistry">Chemistry</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="level">Level</Label>
-                      <Select onValueChange={(value) => setNewStudent({...newStudent, level: value})}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select level" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="100L">100 Level</SelectItem>
-                          <SelectItem value="200L">200 Level</SelectItem>
-                          <SelectItem value="300L">300 Level</SelectItem>
-                          <SelectItem value="400L">400 Level</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">Phone Number</Label>
-                      <Input
-                        id="phone"
-                        placeholder="+234 901 234 5678"
-                        value={newStudent.phone}
-                        onChange={(e) => setNewStudent({...newStudent, phone: e.target.value})}
-                      />
-                    </div>
-                  </div>
-                  <DialogFooter>
-                    <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button onClick={handleAddStudent}>Add Student</Button>
-                  </DialogFooter>
+                  <StudentForm
+                    onSubmit={handleAddStudent}
+                    onCancel={() => setIsAddDialogOpen(false)}
+                    isLoading={addStudentMutation.isPending}
+                  />
                 </DialogContent>
               </Dialog>
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="mb-4">
+          <div className="mb-4 flex items-center space-x-2">
+            <Search className="w-4 h-4 text-gray-400" />
             <Input
-              placeholder="Search students by name or matric number..."
+              placeholder="Search students by name, matric number, or email..."
               className="max-w-sm"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
           
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Matric Number</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Department</TableHead>
-                <TableHead>Level</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {students.map((student) => (
-                <TableRow key={student.id}>
-                  <TableCell className="font-medium">{student.matricNumber}</TableCell>
-                  <TableCell>{student.name}</TableCell>
-                  <TableCell>{student.department}</TableCell>
-                  <TableCell>{student.level}</TableCell>
-                  <TableCell>
-                    <Badge variant={student.status === 'active' ? 'default' : 'secondary'}>
-                      {student.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex space-x-2">
-                      <Button size="sm" variant="outline">
-                        <Pencil className="w-3 h-3" />
-                      </Button>
-                      <Button size="sm" variant="outline">
-                        <FileText className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          {isLoading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+              <p className="mt-2 text-gray-500">Loading students...</p>
+            </div>
+          ) : (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Matric Number</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Department</TableHead>
+                    <TableHead>Level</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredStudents.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                        {searchTerm ? 'No students found matching your search.' : 'No students added yet.'}
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredStudents.map((student) => (
+                      <TableRow key={student.id}>
+                        <TableCell className="font-medium">{student.matric_number}</TableCell>
+                        <TableCell>{`${student.first_name} ${student.last_name}`}</TableCell>
+                        <TableCell>{student.email}</TableCell>
+                        <TableCell>{student.department?.name || 'Not assigned'}</TableCell>
+                        <TableCell>{student.level}</TableCell>
+                        <TableCell>
+                          <Badge 
+                            variant={
+                              student.status === 'active' ? 'default' : 
+                              student.status === 'graduated' ? 'secondary' : 'destructive'
+                            }
+                          >
+                            {student.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex space-x-2">
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleEditStudent(student)}
+                            >
+                              <Pencil className="w-3 h-3" />
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleDeleteStudent(student.id)}
+                              disabled={deleteStudentMutation.isPending}
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
+
+      {/* Edit Student Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Student</DialogTitle>
+            <DialogDescription>
+              Update the student details below
+            </DialogDescription>
+          </DialogHeader>
+          {editingStudent && (
+            <StudentForm
+              student={editingStudent}
+              onSubmit={handleUpdateStudent}
+              onCancel={() => {
+                setIsEditDialogOpen(false);
+                setEditingStudent(null);
+              }}
+              isLoading={updateStudentMutation.isPending}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
