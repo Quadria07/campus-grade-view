@@ -36,6 +36,16 @@ export interface Result {
   };
 }
 
+// Type for creating new results - exclude auto-generated fields
+export type CreateResultData = {
+  student_id: string;
+  course_id: string;
+  semester_id: string;
+  session_id: string;
+  score: number;
+  remarks?: string;
+};
+
 export const useResults = () => {
   return useQuery({
     queryKey: ['results'],
@@ -67,7 +77,7 @@ export const useAddResult = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (resultData: Omit<Result, 'id' | 'created_at' | 'updated_at' | 'grade' | 'student' | 'course' | 'semester' | 'session'>) => {
+    mutationFn: async (resultData: CreateResultData) => {
       console.log('Adding result:', resultData);
       const { data, error } = await supabase
         .from('results')
@@ -104,7 +114,7 @@ export const useUpdateResult = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, ...resultData }: Partial<Result> & { id: string }) => {
+    mutationFn: async ({ id, ...resultData }: Partial<CreateResultData> & { id: string }) => {
       console.log('Updating result:', id, resultData);
       const { data, error } = await supabase
         .from('results')
@@ -178,7 +188,7 @@ export const useBulkAddResults = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (results: Omit<Result, 'id' | 'created_at' | 'updated_at' | 'grade' | 'student' | 'course' | 'semester' | 'session'>[]) => {
+    mutationFn: async (results: CreateResultData[]) => {
       console.log('Adding bulk results:', results);
       const { data, error } = await supabase
         .from('results')
