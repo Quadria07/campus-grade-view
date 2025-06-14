@@ -30,7 +30,7 @@ const AddLecturerDialog: React.FC<AddLecturerDialogProps> = ({ open, onOpenChang
 
   const createLecturerMutation = useMutation({
     mutationFn: async (lecturerData: any) => {
-      // Create user account
+      // Create user account with explicit type casting
       const { data: userId, error } = await supabase.rpc('create_user_with_password', {
         p_email: lecturerData.email,
         p_password: lecturerData.password,
