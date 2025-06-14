@@ -78,6 +78,50 @@ export type Database = {
         }
         Relationships: []
       }
+      lecturer_profiles: {
+        Row: {
+          created_at: string
+          department: string | null
+          employee_id: string | null
+          first_name: string
+          id: string
+          last_name: string
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          department?: string | null
+          employee_id?: string | null
+          first_name: string
+          id?: string
+          last_name: string
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          department?: string | null
+          employee_id?: string | null
+          first_name?: string
+          id?: string
+          last_name?: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lecturer_profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       results: {
         Row: {
           course_id: string
@@ -258,6 +302,7 @@ export type Database = {
           session_id: string | null
           status: string
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           address?: string | null
@@ -276,6 +321,7 @@ export type Database = {
           session_id?: string | null
           status?: string
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           address?: string | null
@@ -294,6 +340,7 @@ export type Database = {
           session_id?: string | null
           status?: string
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -317,7 +364,44 @@ export type Database = {
             referencedRelation: "sessions"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "students_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      users: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          is_active: boolean
+          password_hash: string
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          is_active?: boolean
+          password_hash: string
+          role: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          is_active?: boolean
+          password_hash?: string
+          role?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
     }
     Views: {
@@ -327,6 +411,21 @@ export type Database = {
       calculate_grade: {
         Args: { score: number }
         Returns: string
+      }
+      create_user_with_password: {
+        Args: { p_email: string; p_password: string; p_role: string }
+        Returns: string
+      }
+      update_user_password: {
+        Args: { p_user_id: string; p_new_password: string }
+        Returns: boolean
+      }
+      verify_user_password: {
+        Args: { p_email: string; p_password: string }
+        Returns: {
+          user_id: string
+          role: string
+        }[]
       }
     }
     Enums: {

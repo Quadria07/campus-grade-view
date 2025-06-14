@@ -19,6 +19,7 @@ interface AuthContextType {
   login: (email: string, password: string, role: 'lecturer' | 'student') => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
+  updateUser: (user: User) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -46,10 +47,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string, role: 'lecturer' | 'student') => {
     try {
-      // Mock authentication - in real app, this would be Supabase auth
       console.log('Attempting login:', { email, role });
       
-      // For demo purposes, create mock user
+      // For demo purposes, create mock user - this will be replaced with real auth
       const mockUser: User = {
         id: Math.random().toString(36).substr(2, 9),
         email,
@@ -75,12 +75,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('user');
   };
 
+  const updateUser = (updatedUser: User) => {
+    setUser(updatedUser);
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+  };
+
   const value = {
     user,
     loading,
     login,
     logout,
     isAuthenticated: !!user,
+    updateUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -1,13 +1,13 @@
-
 import React, { useState } from 'react';
 import Header from '../components/Header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, BookOpen, FileText, Upload, Download } from 'lucide-react';
+import { Users, BookOpen, FileText, Upload, Download, Settings } from 'lucide-react';
 import StudentManagement from '../components/lecturer/StudentManagement';
 import CourseManagement from '../components/lecturer/CourseManagement';
 import ResultManagement from '../components/lecturer/ResultManagement';
+import ProfileSettings from '../components/lecturer/ProfileSettings';
 import { useStudents } from '@/hooks/useStudents';
 import { useCourses } from '@/hooks/useCourses';
 import { useResults } from '@/hooks/useResults';
@@ -97,11 +97,12 @@ const LecturerDashboard: React.FC = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-8">
+          <TabsList className="grid w-full grid-cols-5 mb-8">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="students">Students</TabsTrigger>
             <TabsTrigger value="courses">Courses</TabsTrigger>
             <TabsTrigger value="results">Results</TabsTrigger>
+            <TabsTrigger value="profile">Profile</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
@@ -213,6 +214,10 @@ const LecturerDashboard: React.FC = () => {
 
           <TabsContent value="results">
             <ResultManagement />
+          </TabsContent>
+
+          <TabsContent value="profile">
+            <ProfileSettings />
           </TabsContent>
         </Tabs>
       </main>
