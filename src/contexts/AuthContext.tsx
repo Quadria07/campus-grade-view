@@ -1,13 +1,5 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { 
-  useAuthenticateUser, 
-  useUser, 
-  useLecturerProfile,
-  User,
-  LecturerProfile 
-} from '@/hooks/useAuth';
-import { useStudentProfile } from '@/hooks/useStudents';
 
 interface AuthUser {
   id: string;
@@ -46,98 +38,70 @@ export const useAuth = () => {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
-  const [authenticatedUserId, setAuthenticatedUserId] = useState<string | null>(null);
-
-  const authenticateUserMutation = useAuthenticateUser();
-  const { data: userData } = useUser(authenticatedUserId || undefined);
-  const { data: lecturerProfile } = useLecturerProfile(authenticatedUserId || undefined);
-  const { data: studentProfile } = useStudentProfile(authenticatedUserId || undefined);
 
   useEffect(() => {
     // Check for existing session on mount
-    const storedUser = localStorage.getItem('user');
+    const storedUser = localStorage.getItem('demo_user');
     if (storedUser) {
       const parsedUser = JSON.parse(storedUser);
       setUser(parsedUser);
-      setAuthenticatedUserId(parsedUser.id);
     }
     setLoading(false);
   }, []);
 
-  // Update user data when database data changes
-  useEffect(() => {
-    if (userData && authenticatedUserId) {
-      let profileData: any = {};
-      
-      if (userData.role === 'lecturer' && lecturerProfile) {
-        profileData = {
-          name: `${lecturerProfile.first_name} ${lecturerProfile.last_name}`,
-          firstName: lecturerProfile.first_name,
-          lastName: lecturerProfile.last_name,
-          department: lecturerProfile.department,
-          phone: lecturerProfile.phone
-        };
-      } else if (userData.role === 'student' && studentProfile) {
-        profileData = {
-          name: `${studentProfile.first_name} ${studentProfile.last_name}`,
-          firstName: studentProfile.first_name,
-          lastName: studentProfile.last_name,
-          matricNumber: studentProfile.matric_number,
-          department: studentProfile.departments?.name || 'Unknown',
-          phone: studentProfile.phone,
-          level: studentProfile.level
-        };
-      }
-
-      const updatedUser: AuthUser = {
-        id: userData.id,
-        email: userData.email,
-        role: userData.role,
-        profile: profileData
-      };
-
-      setUser(updatedUser);
-      localStorage.setItem('user', JSON.stringify(updatedUser));
-    }
-  }, [userData, lecturerProfile, studentProfile, authenticatedUserId]);
-
   const login = async (email: string, password: string, role: 'lecturer' | 'student') => {
     try {
-      console.log('Attempting login:', { email, role });
+      console.log('Demo login:', { email, role });
       
-      const result = await authenticateUserMutation.mutateAsync({ email, password });
+      // Create demo user based on role
+      let demoUser: AuthUser;
       
-      if (result.role !== role) {
-        throw new Error(`Invalid credentials for ${role} account`);
+      if (role === 'lecturer') {
+        demoUser = {
+          id: 'demo-lecturer-' + Date.now(),
+          email,
+          role: 'lecturer',
+          profile: {
+            name: 'Demo Lecturer',
+            firstName: 'Demo',
+            lastName: 'Lecturer',
+            department: 'Computer Science',
+            phone: '+234 800 123 4567'
+          }
+        };
+      } else {
+        demoUser = {
+          id: 'demo-student-' + Date.now(),
+          email,
+          role: 'student',
+          profile: {
+            name: 'Demo Student',
+            firstName: 'Demo',
+            lastName: 'Student',
+            matricNumber: email.split('@')[0] || 'STU001',
+            department: 'Computer Science',
+            phone: '+234 800 987 6543',
+            level: '200'
+          }
+        };
       }
 
-      setAuthenticatedUserId(result.user_id);
-      
-      // Create initial user object - will be updated by useEffect when data loads
-      const initialUser: AuthUser = {
-        id: result.user_id,
-        email,
-        role: result.role,
-        profile: {}
-      };
-
-      setUser(initialUser);
-      localStorage.setItem('user', JSON.stringify(initialUser));
+      setUser(demoUser);
+      localStorage.setItem('demo_user', JSON.stringify(demoUser));
     } catch (error) {
-      console.error('Login error:', error);
-      throw new Error('Invalid email or password');
+      console.error('Demo login error:', error);
+      throw new Error('Demo login failed');
     }
   };
 
   const logout = () => {
     setUser(null);
-    setAuthenticatedUserId(null);
-    localStorage.removeItem('user');
+    localStorage.removeItem('demo_user');
   };
 
   const updateUser = (updatedUser: AuthUser) => {
     setUser(updatedUser);
-    localStorage.setItem('user', JSON.stringify(updatedUser));
+    localStorage.setItem('demo_user', JSON.stringify(updatedUser));
   };
 
   const value = {

@@ -11,8 +11,8 @@ import { ArrowLeft, Mail, Lock } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 const LecturerLogin: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('lecturer@demo.com');
+  const [password, setPassword] = useState('demo123');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
@@ -27,15 +27,15 @@ const LecturerLogin: React.FC = () => {
     try {
       await login(email, password, 'lecturer');
       toast({
-        title: "Login Successful",
-        description: "Welcome back, Lecturer!",
+        title: "Demo Login Successful",
+        description: "Welcome to the demo, Lecturer!",
       });
       navigate('/lecturer-dashboard');
     } catch (err: any) {
-      setError(err.message || 'Invalid email or password. Please try again.');
+      setError(err.message || 'Demo login failed. Please try again.');
       toast({
         title: "Login Failed",
-        description: "Please check your credentials and try again.",
+        description: "Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -58,9 +58,9 @@ const LecturerLogin: React.FC = () => {
             <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-2xl font-bold text-primary-foreground">L</span>
             </div>
-            <CardTitle className="text-2xl">Lecturer Login</CardTitle>
+            <CardTitle className="text-2xl">Lecturer Demo Login</CardTitle>
             <CardDescription>
-              Sign in to access your lecturer dashboard
+              Demo mode - any credentials will work
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -78,7 +78,7 @@ const LecturerLogin: React.FC = () => {
                   <Input
                     id="email"
                     type="email"
-                    placeholder="lecturer@university.edu"
+                    placeholder="lecturer@demo.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="pl-10"
@@ -94,7 +94,7 @@ const LecturerLogin: React.FC = () => {
                   <Input
                     id="password"
                     type="password"
-                    placeholder="Enter your password"
+                    placeholder="demo123"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="pl-10"
@@ -108,14 +108,14 @@ const LecturerLogin: React.FC = () => {
                 className="w-full bg-primary hover:bg-primary/90" 
                 disabled={loading}
               >
-                {loading ? 'Signing in...' : 'Sign In'}
+                {loading ? 'Signing in...' : 'Demo Sign In'}
               </Button>
             </form>
 
             <div className="mt-6 text-center">
-              <Button variant="link" className="text-sm text-primary">
-                Forgot Password?
-              </Button>
+              <p className="text-sm text-gray-600">
+                Demo mode: Use any email and password to login
+              </p>
             </div>
           </CardContent>
         </Card>

@@ -11,8 +11,8 @@ import { ArrowLeft, User, Lock } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 const StudentLogin: React.FC = () => {
-  const [matricNumber, setMatricNumber] = useState('');
-  const [password, setPassword] = useState('');
+  const [matricNumber, setMatricNumber] = useState('STU001');
+  const [password, setPassword] = useState('demo123');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
@@ -25,18 +25,18 @@ const StudentLogin: React.FC = () => {
     setLoading(true);
 
     try {
-      // For students, we use matric number as email (will be converted to actual email in backend)
+      // For demo, use matric number as email format
       await login(`${matricNumber}@student.edu`, password, 'student');
       toast({
-        title: "Login Successful",
-        description: "Welcome back, Student!",
+        title: "Demo Login Successful",
+        description: "Welcome to the demo, Student!",
       });
       navigate('/student-dashboard');
     } catch (err: any) {
-      setError(err.message || 'Invalid matric number or password. Please try again.');
+      setError(err.message || 'Demo login failed. Please try again.');
       toast({
         title: "Login Failed",
-        description: "Please check your credentials and try again.",
+        description: "Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -59,9 +59,9 @@ const StudentLogin: React.FC = () => {
             <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-2xl font-bold text-white">S</span>
             </div>
-            <CardTitle className="text-2xl">Student Login</CardTitle>
+            <CardTitle className="text-2xl">Student Demo Login</CardTitle>
             <CardDescription>
-              Sign in to access your academic records
+              Demo mode - any credentials will work
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -95,7 +95,7 @@ const StudentLogin: React.FC = () => {
                   <Input
                     id="password"
                     type="password"
-                    placeholder="Enter your password"
+                    placeholder="demo123"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="pl-10"
@@ -109,14 +109,14 @@ const StudentLogin: React.FC = () => {
                 className="w-full bg-secondary hover:bg-secondary/90 text-white" 
                 disabled={loading}
               >
-                {loading ? 'Signing in...' : 'Sign In'}
+                {loading ? 'Signing in...' : 'Demo Sign In'}
               </Button>
             </form>
 
             <div className="mt-4 text-center">
-              <Button variant="link" className="text-sm text-primary">
-                Forgot Password?
-              </Button>
+              <p className="text-sm text-gray-600">
+                Demo mode: Use any matric number and password to login
+              </p>
             </div>
           </CardContent>
         </Card>
