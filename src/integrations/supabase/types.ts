@@ -78,6 +78,74 @@ export type Database = {
         }
         Relationships: []
       }
+      results: {
+        Row: {
+          course_id: string
+          created_at: string
+          grade: string
+          id: string
+          remarks: string | null
+          score: number
+          semester_id: string
+          session_id: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          grade: string
+          id?: string
+          remarks?: string | null
+          score: number
+          semester_id: string
+          session_id: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          grade?: string
+          id?: string
+          remarks?: string | null
+          score?: number
+          semester_id?: string
+          session_id?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "results_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "results_semester_id_fkey"
+            columns: ["semester_id"]
+            isOneToOne: false
+            referencedRelation: "semesters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "results_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "results_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       semesters: {
         Row: {
           code: string
@@ -256,7 +324,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      calculate_grade: {
+        Args: { score: number }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
