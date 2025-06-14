@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { User, Lock, Mail, Phone, Building, LogOut } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 import { 
   useUser, 
@@ -18,7 +18,7 @@ import {
 } from '@/hooks/useAuth';
 
 const ProfileSettings: React.FC = () => {
-  const { user, logout, updateUser } = useAuth();
+  const { user, logout } = useAuth();
   const [error, setError] = useState('');
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
@@ -75,18 +75,6 @@ const ProfileSettings: React.FC = () => {
         employeeId: profileData.employeeId || undefined,
         department: profileData.department || undefined,
         phone: profileData.phone || undefined
-      });
-
-      // Update user context
-      updateUser({
-        ...user!,
-        email: profileData.email,
-        profile: {
-          ...user!.profile,
-          name: `${profileData.firstName} ${profileData.lastName}`,
-          department: profileData.department,
-          phone: profileData.phone
-        }
       });
 
       toast({

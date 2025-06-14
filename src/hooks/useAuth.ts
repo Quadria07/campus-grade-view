@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
@@ -154,4 +155,166 @@ export const useAuth = () => {
     logout,
     signup
   };
+};
+
+// Additional hooks for user management
+export const useUser = (userId?: string) => {
+  return useQuery({
+    queryKey: ['user', userId],
+    queryFn: async () => {
+      if (!userId) return null;
+      
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!userId,
+  });
+};
+
+export const useLecturerProfile = (userId?: string) => {
+  return useQuery({
+    queryKey: ['lecturer-profile', userId],
+    queryFn: async () => {
+      if (!userId) return null;
+      
+      const { data, error } = await supabase
+        .from('lecturer_profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!userId,
+  });
+};
+
+export const useUpdateUserEmail = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ userId, email }: { userId: string; email: string }) => {
+      const { data, error } = await supabase
+        .from('users')
+        .update({ email })
+        .eq('id', userId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user'] });
+    },
+  });
+};
+
+export const useUpdatePassword = () => {
+  return useMutation({
+    mutationFn: async ({ userId, newPassword }: { userId: string; newPassword: string }) => {
+      const { data, error } = await supabase.rpc('update_user_password', {
+        p_user_id: userId,
+        p_new_password: newPassword
+      });
+
+      if (error) throw error;
+      return data;
+    },
+  });
+};
+
+export const useUpdateLecturerProfile = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ 
+      userId, 
+      firstName, 
+      lastName, 
+      employeeId, 
+      department, 
+      phone 
+    }: { 
+      userId: string; 
+      firstName: string; 
+      lastName: string; 
+      employeeId?: string; 
+      department?: string; 
+      phone?: string; 
+    }) => {
+      const { data, error } = await supabase
+        .from('lecturer_profiles')
+        .update({
+          first_name: firstName,
+          last_name: lastName,
+          employee_id: employeeId,
+          department,
+          phone
+        })
+        .eq('user_id', userId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['lecturer-profile'] });
+    },
+  });
+};
+
+export const useCreateLecturerAccount = () => {
+  return useMutation({
+    mutationFn: async ({ 
+      email, 
+      password, 
+      firstName, 
+      lastName, 
+      employeeId, 
+      department, 
+      phone 
+    }: { 
+      email: string; 
+      password: string; 
+      firstName: string; 
+      lastName: string; 
+      employeeId?: string; 
+      department?: string; 
+      phone?: string; 
+    }) => {
+      // Create user account
+      const { data: userId, error } = await supabase.rpc('create_user_with_password', {
+        p_email: email,
+        p_password: password,
+        p_role: 'lecturer'
+      });
+
+      if (error) throw error;
+
+      // Create lecturer profile
+      const { error: profileError } = await supabase
+        .from('lecturer_profiles')
+        .insert({
+          user_id: userId,
+          first_name: firstName,
+          last_name: lastName,
+          employee_id: employeeId,
+          department,
+          phone
+        });
+
+      if (profileError) throw profileError;
+
+      return userId;
+    },
+  });
 };
