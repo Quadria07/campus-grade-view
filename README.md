@@ -1,73 +1,289 @@
-# Welcome to your Lovable project
 
-## Project info
+# Check My Grade - Academic Grade Management System
 
-**URL**: https://lovable.dev/projects/baadfc53-1052-4af4-964f-0216a5d5390b
+A comprehensive web application for managing academic grades, built with React, TypeScript, and Tailwind CSS. This system allows lecturers to manage students and results while providing students with easy access to their academic records.
 
-## How can I edit this code?
+## 🚀 Features
 
-There are several ways of editing your application.
+### For Lecturers
+- **Student Management**: Add, edit, and manage student records
+- **Course Management**: Create and manage course catalog
+- **Result Management**: Upload grades manually or via CSV bulk upload
+- **Automatic Grade Calculation**: Converts scores to letter grades automatically
+- **Report Generation**: Generate and export student transcripts
+- **Dashboard Analytics**: Overview of students, courses, and recent activities
 
-**Use Lovable**
+### For Students
+- **Academic Results**: View grades filtered by semester and session
+- **Profile Management**: Update personal information (editable fields: phone, email)
+- **Transcript Download**: Export academic records as PDF
+- **GPA Tracking**: Real-time CGPA and semester GPA calculations
+- **Progress Monitoring**: Track academic progress and completion status
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/baadfc53-1052-4af4-964f-0216a5d5390b) and start prompting.
+### General Features
+- **Secure Authentication**: Role-based access control for lecturers and students
+- **Responsive Design**: Mobile-friendly interface with modern UI components
+- **Real-time Updates**: Instant feedback and notifications
+- **Data Validation**: Input validation and error handling
+- **Print Support**: Print-friendly result layouts
 
-Changes made via Lovable will be committed automatically to this repo.
+## 🛠️ Tech Stack
 
-**Use your preferred IDE**
+- **Frontend**: React 18 with TypeScript
+- **Styling**: Tailwind CSS + shadcn/ui components
+- **State Management**: Context API
+- **Routing**: React Router v6
+- **HTTP Client**: TanStack Query (React Query)
+- **Icons**: Lucide React
+- **Build Tool**: Vite
+- **Authentication**: Supabase Auth (ready for integration)
+- **Database**: Supabase (ready for integration)
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## 📋 Prerequisites
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- Node.js (v16 or higher)
+- npm or yarn package manager
+- Git
 
-Follow these steps:
+## 🚀 Quick Start
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### 1. Clone the Repository
+```bash
+git clone <repository-url>
+cd check-my-grade
+```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+### 2. Install Dependencies
+```bash
+npm install
+```
 
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+### 3. Start Development Server
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The application will be available at `http://localhost:5173`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### 4. Build for Production
+```bash
+npm run build
+```
 
-**Use GitHub Codespaces**
+### 5. Preview Production Build
+```bash
+npm run preview
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 🗂️ Project Structure
 
-## What technologies are used for this project?
+```
+src/
+├── components/          # Reusable UI components
+│   ├── ui/             # shadcn/ui components
+│   ├── lecturer/       # Lecturer-specific components
+│   └── student/        # Student-specific components
+├── contexts/           # React Context providers
+├── hooks/             # Custom React hooks
+├── pages/             # Page components
+├── lib/               # Utility functions
+└── types/             # TypeScript type definitions
 
-This project is built with:
+public/                # Static assets
+docs/                  # Documentation
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## 🔐 Authentication & Roles
 
-## How can I deploy this project?
+The system supports two user roles:
 
-Simply open [Lovable](https://lovable.dev/projects/baadfc53-1052-4af4-964f-0216a5d5390b) and click on Share -> Publish.
+### Lecturer Access
+- **Login**: Use any email and password (demo mode)
+- **Features**: Full access to student and course management
+- **Dashboard**: `/lecturer-dashboard`
 
-## Can I connect a custom domain to my Lovable project?
+### Student Access
+- **Login**: Use any matric number as username with any password (demo mode)
+- **Features**: View results and manage profile
+- **Dashboard**: `/student-dashboard`
 
-Yes, you can!
+## 📊 Database Schema (Supabase Ready)
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+### Users Table
+```sql
+- id (UUID, Primary Key)
+- email (String, Unique)
+- role (Enum: 'lecturer', 'student')
+- created_at (Timestamp)
+```
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+### Students Table
+```sql
+- id (UUID, Primary Key)
+- user_id (UUID, Foreign Key)
+- matric_number (String, Unique)
+- name (String)
+- department (String)
+- level (String)
+- phone (String)
+```
+
+### Courses Table
+```sql
+- id (UUID, Primary Key)
+- code (String, Unique)
+- title (String)
+- credit_units (Integer)
+- department (String)
+- level (String)
+- semester (String)
+```
+
+### Results Table
+```sql
+- id (UUID, Primary Key)
+- student_id (UUID, Foreign Key)
+- course_id (UUID, Foreign Key)
+- score (Integer)
+- grade (String)
+- semester (String)
+- session (String)
+- created_at (Timestamp)
+```
+
+## 🔧 Configuration
+
+### Environment Variables
+```env
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+### Supabase Setup
+1. Create a new Supabase project
+2. Run the database migrations (SQL schema above)
+3. Configure authentication settings
+4. Add environment variables to your `.env` file
+
+## 📱 API Integration
+
+The application is designed to work with Supabase backend:
+
+- **Authentication**: Supabase Auth
+- **Database**: PostgreSQL via Supabase
+- **File Storage**: Supabase Storage (for CSV uploads)
+- **Real-time**: Supabase Realtime (for live updates)
+
+## 🎨 UI/UX Features
+
+- **Modern Design**: Clean, professional interface
+- **Dark/Light Mode**: Automatic theme detection
+- **Responsive Layout**: Mobile-first design approach
+- **Loading States**: Skeleton loaders and spinners
+- **Error Handling**: User-friendly error messages
+- **Accessibility**: WCAG compliant components
+
+## 📤 Deployment
+
+### Vercel (Recommended)
+```bash
+npm run build
+# Deploy to Vercel
+```
+
+### Netlify
+```bash
+npm run build
+# Deploy build folder to Netlify
+```
+
+### Docker
+```dockerfile
+FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run build
+EXPOSE 3000
+CMD ["npm", "run", "preview"]
+```
+
+## 🔍 Testing
+
+### Run Tests
+```bash
+npm run test
+```
+
+### Test Coverage
+```bash
+npm run test:coverage
+```
+
+## 📝 Development Guide
+
+### Adding New Features
+1. Create feature branch: `git checkout -b feature/new-feature`
+2. Implement feature with tests
+3. Update documentation
+4. Submit pull request
+
+### Code Style
+- Use TypeScript for type safety
+- Follow ESLint configuration
+- Use Prettier for code formatting
+- Write meaningful commit messages
+
+### Component Guidelines
+- Use functional components with hooks
+- Implement proper error boundaries
+- Add loading and error states
+- Write unit tests for components
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch
+3. Commit your changes
+4. Push to the branch
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🆘 Support
+
+For support and questions:
+- Email: support@checkmygrade.edu
+- Documentation: [docs/](docs/)
+- Issues: GitHub Issues
+
+## 🚀 Roadmap
+
+- [ ] Supabase integration
+- [ ] CSV bulk upload functionality
+- [ ] PDF transcript generation
+- [ ] Email notifications
+- [ ] Mobile app (React Native)
+- [ ] Advanced analytics dashboard
+- [ ] Multi-language support
+
+## 📸 Screenshots
+
+### Home Page
+Clean, professional landing page with role-based login options.
+
+### Lecturer Dashboard
+Comprehensive management interface with statistics and quick actions.
+
+### Student Dashboard
+Student-focused interface showing academic progress and results.
+
+### Results Management
+Intuitive interface for managing and uploading student results.
+
+---
+
+**Built with ❤️ for educational excellence**
