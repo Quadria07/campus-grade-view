@@ -174,7 +174,7 @@ const StudentManagement: React.FC = () => {
                         <TableCell className="font-medium">{student.matric_number}</TableCell>
                         <TableCell>{`${student.first_name} ${student.last_name}`}</TableCell>
                         <TableCell>{student.email}</TableCell>
-                        <TableCell>{student.department?.name || 'Not assigned'}</TableCell>
+                        <TableCell>{student.departments?.name || 'Not assigned'}</TableCell>
                         <TableCell>{student.level}</TableCell>
                         <TableCell>
                           <Badge 
