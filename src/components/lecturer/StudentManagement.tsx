@@ -7,13 +7,14 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Users, Plus, Upload, Pencil, Trash2, Search } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
 import { useStudents, useAddStudent, useUpdateStudent, useDeleteStudent, type Student } from '@/hooks/useStudents';
 import StudentForm from './StudentForm';
+import BulkUploadDialog from './BulkUploadDialog';
 
 const StudentManagement: React.FC = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -72,13 +73,6 @@ const StudentManagement: React.FC = () => {
     }
   };
 
-  const handleBulkUpload = () => {
-    toast({
-      title: "Bulk Upload",
-      description: "CSV upload functionality will be implemented soon.",
-    });
-  };
-
   if (error) {
     return (
       <Card>
@@ -109,7 +103,7 @@ const StudentManagement: React.FC = () => {
               </CardDescription>
             </div>
             <div className="flex space-x-2">
-              <Button onClick={handleBulkUpload} variant="outline">
+              <Button onClick={() => setIsBulkUploadOpen(true)} variant="outline">
                 <Upload className="w-4 h-4 mr-2" />
                 Bulk Upload CSV
               </Button>
@@ -243,6 +237,12 @@ const StudentManagement: React.FC = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Bulk Upload Dialog */}
+      <BulkUploadDialog
+        open={isBulkUploadOpen}
+        onOpenChange={setIsBulkUploadOpen}
+      />
     </div>
   );
 };
