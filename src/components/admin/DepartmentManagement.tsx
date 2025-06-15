@@ -9,7 +9,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Plus, Edit } from 'lucide-react';
 import { useForm } from 'react-hook-form';
-import { useDepartments } from '../../hooks/useCourses';
+import { useDepartments, useAddDepartment, useUpdateDepartment } from '../../hooks/useDepartments';
 
 interface DepartmentFormData {
   name: string;
@@ -18,8 +18,11 @@ interface DepartmentFormData {
 
 const DepartmentManagement: React.FC = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingDepartment, setEditingDepartment] = useState<any>(null);
   const { data: departments } = useDepartments();
+  const addDepartmentMutation = useAddDepartment();
+  const updateDepartmentMutation = useUpdateDepartment();
 
   const form = useForm<DepartmentFormData>({
     defaultValues: {
@@ -29,16 +32,40 @@ const DepartmentManagement: React.FC = () => {
   });
 
   const handleAddDepartment = async (data: DepartmentFormData) => {
-    console.log('Adding department:', data);
-    // TODO: Implement add department functionality
-    setIsAddDialogOpen(false);
-    form.reset();
+    try {
+      await addDepartmentMutation.mutateAsync(data);
+      setIsAddDialogOpen(false);
+      form.reset();
+    } catch (error) {
+      console.error('Failed to add department:', error);
+    }
   };
 
   const handleEditDepartment = (department: any) => {
     setEditingDepartment(department);
     form.setValue('name', department.name);
     form.setValue('code', department.code);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdateDepartment = async (data: DepartmentFormData) => {
+    if (!editingDepartment) return;
+    try {
+      await updateDepartmentMutation.mutateAsync({
+        id: editingDepartment.id,
+        ...data
+      });
+      setIsEditDialogOpen(false);
+      setEditingDepartment(null);
+      form.reset();
+    } catch (error) {
+      console.error('Failed to update department:', error);
+    }
+  };
+
+  const resetForm = () => {
+    form.reset();
+    setEditingDepartment(null);
   };
 
   return (
@@ -92,10 +119,12 @@ const DepartmentManagement: React.FC = () => {
                     )}
                   />
                   <div className="flex justify-end space-x-2">
-                    <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                    <Button type="button" variant="outline" onClick={() => { setIsAddDialogOpen(false); resetForm(); }}>
                       Cancel
                     </Button>
-                    <Button type="submit">Add Department</Button>
+                    <Button type="submit" disabled={addDepartmentMutation.isPending}>
+                      {addDepartmentMutation.isPending ? 'Adding...' : 'Add Department'}
+                    </Button>
                   </div>
                 </form>
               </Form>
@@ -139,6 +168,56 @@ const DepartmentManagement: React.FC = () => {
             <p className="text-gray-500">No departments found. Add your first department to get started.</p>
           </div>
         )}
+
+        {/* Edit Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Department</DialogTitle>
+              <DialogDescription>
+                Update the department details below
+              </DialogDescription>
+            </DialogHeader>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(handleUpdateDepartment)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Department Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., Computer Science" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="code"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Department Code</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., CSC" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="flex justify-end space-x-2">
+                  <Button type="button" variant="outline" onClick={() => { setIsEditDialogOpen(false); resetForm(); }}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={updateDepartmentMutation.isPending}>
+                    {updateDepartmentMutation.isPending ? 'Updating...' : 'Update Department'}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   );

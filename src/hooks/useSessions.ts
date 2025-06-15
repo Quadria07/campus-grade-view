@@ -69,3 +69,41 @@ export const useAddSession = () => {
     },
   });
 };
+
+export const useUpdateSession = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, ...sessionData }: Partial<Session> & { id: string }) => {
+      console.log('Updating session:', id, sessionData);
+      const { data, error } = await supabase
+        .from('sessions')
+        .update(sessionData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating session:', error);
+        throw error;
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sessions'] });
+      toast({
+        title: "Session Updated",
+        description: "Session has been successfully updated.",
+      });
+    },
+    onError: (error) => {
+      console.error('Failed to update session:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update session. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+};

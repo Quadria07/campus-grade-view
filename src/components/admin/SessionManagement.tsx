@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Plus, Edit } from 'lucide-react';
 import { useForm } from 'react-hook-form';
-import { useSessions, useAddSession } from '../../hooks/useSessions';
+import { useSessions, useAddSession, useUpdateSession } from '../../hooks/useSessions';
 
 interface SessionFormData {
   name: string;
@@ -21,9 +21,11 @@ interface SessionFormData {
 
 const SessionManagement: React.FC = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingSession, setEditingSession] = useState<any>(null);
   const { data: sessions } = useSessions();
   const addSessionMutation = useAddSession();
+  const updateSessionMutation = useUpdateSession();
 
   const form = useForm<SessionFormData>({
     defaultValues: {
@@ -50,6 +52,27 @@ const SessionManagement: React.FC = () => {
     form.setValue('start_date', session.start_date);
     form.setValue('end_date', session.end_date);
     form.setValue('is_active', session.is_active);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdateSession = async (data: SessionFormData) => {
+    if (!editingSession) return;
+    try {
+      await updateSessionMutation.mutateAsync({
+        id: editingSession.id,
+        ...data
+      });
+      setIsEditDialogOpen(false);
+      setEditingSession(null);
+      form.reset();
+    } catch (error) {
+      console.error('Failed to update session:', error);
+    }
+  };
+
+  const resetForm = () => {
+    form.reset();
+    setEditingSession(null);
   };
 
   return (
@@ -136,7 +159,7 @@ const SessionManagement: React.FC = () => {
                     )}
                   />
                   <div className="flex justify-end space-x-2">
-                    <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                    <Button type="button" variant="outline" onClick={() => { setIsAddDialogOpen(false); resetForm(); }}>
                       Cancel
                     </Button>
                     <Button type="submit" disabled={addSessionMutation.isPending}>
@@ -189,6 +212,89 @@ const SessionManagement: React.FC = () => {
             <p className="text-gray-500">No sessions found. Add your first session to get started.</p>
           </div>
         )}
+
+        {/* Edit Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Session</DialogTitle>
+              <DialogDescription>
+                Update the session details below
+              </DialogDescription>
+            </DialogHeader>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(handleUpdateSession)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Session Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., 2023/2024 Academic Session" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="start_date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Start Date</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="end_date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>End Date</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="is_active"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-base">Active Session</FormLabel>
+                        <FormDescription>
+                          Set this session as currently active
+                        </FormDescription>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <div className="flex justify-end space-x-2">
+                  <Button type="button" variant="outline" onClick={() => { setIsEditDialogOpen(false); resetForm(); }}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={updateSessionMutation.isPending}>
+                    {updateSessionMutation.isPending ? 'Updating...' : 'Update Session'}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   );

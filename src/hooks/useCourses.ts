@@ -53,7 +53,7 @@ export const useAddCourse = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (courseData: Omit<Course, 'id' | 'created_at' | 'department'>) => {
+    mutationFn: async (courseData: Omit<Course, 'id' | 'created_at' | 'department' | 'semester'>) => {
       console.log('Adding course:', courseData);
       const { data, error } = await supabase
         .from('courses')
@@ -92,9 +92,11 @@ export const useUpdateCourse = () => {
   return useMutation({
     mutationFn: async ({ id, ...courseData }: Partial<Course> & { id: string }) => {
       console.log('Updating course:', id, courseData);
+      // Remove department and semester from the update data since they are joins
+      const { department, semester, ...updateData } = courseData;
       const { data, error } = await supabase
         .from('courses')
-        .update(courseData)
+        .update(updateData)
         .eq('id', id)
         .select()
         .single();
@@ -171,25 +173,6 @@ export const useDepartments = () => {
 
       if (error) {
         console.error('Error fetching departments:', error);
-        throw error;
-      }
-
-      return data;
-    },
-  });
-};
-
-export const useSemesters = () => {
-  return useQuery({
-    queryKey: ['semesters'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('semesters')
-        .select('*')
-        .order('name');
-
-      if (error) {
-        console.error('Error fetching semesters:', error);
         throw error;
       }
 

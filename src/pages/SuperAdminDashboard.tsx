@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import Header from '../components/Header';
@@ -16,9 +15,8 @@ import AddLecturerDialog from '../components/admin/AddLecturerDialog';
 import StudentForm from '../components/lecturer/StudentForm';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useAddStudent } from '../hooks/useStudents';
-import { useSessions, useAddSession } from '../hooks/useSessions';
-import { useSemesters, useAddSemester, useUpdateSemester, useDeleteSemester } from '../hooks/useSemesters';
-import { useCourses, useAddCourse, useUpdateCourse, useDeleteCourse, useDepartments } from '../hooks/useCourses';
+import { useSessions } from '../hooks/useSessions';
+import { useCourses, useDepartments } from '../hooks/useCourses';
 import DepartmentManagement from '../components/admin/DepartmentManagement';
 import SessionManagement from '../components/admin/SessionManagement';
 import CourseManagement from '../components/admin/CourseManagement';
@@ -32,7 +30,6 @@ const SuperAdminDashboard: React.FC = () => {
   
   const { data: students } = useStudents();
   const { data: sessions } = useSessions();
-  const { data: semesters } = useSemesters();
   const { data: courses } = useCourses();
   const { data: departments } = useDepartments();
   const addStudentMutation = useAddStudent();
@@ -128,7 +125,7 @@ const SuperAdminDashboard: React.FC = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-8">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
             <TabsTrigger value="lecturers">Lecturers</TabsTrigger>
@@ -136,7 +133,6 @@ const SuperAdminDashboard: React.FC = () => {
             <TabsTrigger value="departments">Departments</TabsTrigger>
             <TabsTrigger value="sessions">Sessions</TabsTrigger>
             <TabsTrigger value="courses">Courses</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
@@ -429,40 +425,6 @@ const SuperAdminDashboard: React.FC = () => {
 
           <TabsContent value="courses" className="space-y-6">
             <CourseManagement />
-          </TabsContent>
-
-          <TabsContent value="settings" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Admin Settings</CardTitle>
-                <CardDescription>Configure your super admin preferences</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 border rounded-lg">
-                    <div>
-                      <h4 className="font-medium">Email Notifications</h4>
-                      <p className="text-sm text-gray-500">Receive system alerts and updates</p>
-                    </div>
-                    <Button variant="outline" size="sm">Configure</Button>
-                  </div>
-                  <div className="flex items-center justify-between p-4 border rounded-lg">
-                    <div>
-                      <h4 className="font-medium">Security Settings</h4>
-                      <p className="text-sm text-gray-500">Manage security policies and access controls</p>
-                    </div>
-                    <Button variant="outline" size="sm">Manage</Button>
-                  </div>
-                  <div className="flex items-center justify-between p-4 border rounded-lg">
-                    <div>
-                      <h4 className="font-medium">System Maintenance</h4>
-                      <p className="text-sm text-gray-500">Schedule maintenance windows and updates</p>
-                    </div>
-                    <Button variant="outline" size="sm">Schedule</Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </TabsContent>
         </Tabs>
       </div>

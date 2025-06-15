@@ -10,7 +10,8 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Edit } from 'lucide-react';
 import { useForm } from 'react-hook-form';
-import { useCourses, useAddCourse, useDepartments } from '../../hooks/useCourses';
+import { useCourses, useAddCourse, useUpdateCourse } from '../../hooks/useCourses';
+import { useDepartments } from '../../hooks/useDepartments';
 import { useSemesters } from '../../hooks/useSemesters';
 
 interface CourseFormData {
@@ -24,11 +25,13 @@ interface CourseFormData {
 
 const CourseManagement: React.FC = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<any>(null);
   const { data: courses } = useCourses();
   const { data: departments } = useDepartments();
   const { data: semesters } = useSemesters();
   const addCourseMutation = useAddCourse();
+  const updateCourseMutation = useUpdateCourse();
 
   const form = useForm<CourseFormData>({
     defaultValues: {
@@ -59,7 +62,152 @@ const CourseManagement: React.FC = () => {
     form.setValue('semester_id', course.semester_id || '');
     form.setValue('level', course.level);
     form.setValue('units', course.units);
+    setIsEditDialogOpen(true);
   };
+
+  const handleUpdateCourse = async (data: CourseFormData) => {
+    if (!editingCourse) return;
+    try {
+      await updateCourseMutation.mutateAsync({
+        id: editingCourse.id,
+        ...data
+      });
+      setIsEditDialogOpen(false);
+      setEditingCourse(null);
+      form.reset();
+    } catch (error) {
+      console.error('Failed to update course:', error);
+    }
+  };
+
+  const resetForm = () => {
+    form.reset();
+    setEditingCourse(null);
+  };
+
+  const renderCourseForm = (isEdit = false) => (
+    <div className="grid grid-cols-2 gap-4">
+      <FormField
+        control={form.control}
+        name="name"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Course Name</FormLabel>
+            <FormControl>
+              <Input placeholder="e.g., Introduction to Programming" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={form.control}
+        name="code"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Course Code</FormLabel>
+            <FormControl>
+              <Input placeholder="e.g., CSC101" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      
+      <FormField
+        control={form.control}
+        name="department_id"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Department</FormLabel>
+            <Select onValueChange={field.onChange} value={field.value}>
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select department" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                {departments?.map((dept) => (
+                  <SelectItem key={dept.id} value={dept.id}>
+                    {dept.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={form.control}
+        name="semester_id"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Semester</FormLabel>
+            <Select onValueChange={field.onChange} value={field.value}>
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select semester" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                {semesters?.map((semester) => (
+                  <SelectItem key={semester.id} value={semester.id}>
+                    {semester.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="level"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Level</FormLabel>
+            <Select onValueChange={field.onChange} value={field.value}>
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select level" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectItem value="100">100 Level</SelectItem>
+                <SelectItem value="200">200 Level</SelectItem>
+                <SelectItem value="300">300 Level</SelectItem>
+                <SelectItem value="400">400 Level</SelectItem>
+                <SelectItem value="500">500 Level</SelectItem>
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={form.control}
+        name="units"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Units</FormLabel>
+            <FormControl>
+              <Input 
+                type="number" 
+                min="1" 
+                max="6" 
+                {...field} 
+                onChange={(e) => field.onChange(parseInt(e.target.value))}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+    </div>
+  );
 
   return (
     <Card>
@@ -85,134 +233,9 @@ const CourseManagement: React.FC = () => {
               </DialogHeader>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(handleAddCourse)} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Course Name</FormLabel>
-                          <FormControl>
-                            <Input placeholder="e.g., Introduction to Programming" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="code"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Course Code</FormLabel>
-                          <FormControl>
-                            <Input placeholder="e.g., CSC101" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="department_id"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Department</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select department" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {departments?.map((dept) => (
-                                <SelectItem key={dept.id} value={dept.id}>
-                                  {dept.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="semester_id"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Semester</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select semester" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {semesters?.map((semester) => (
-                                <SelectItem key={semester.id} value={semester.id}>
-                                  {semester.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="level"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Level</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select level" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="100">100 Level</SelectItem>
-                              <SelectItem value="200">200 Level</SelectItem>
-                              <SelectItem value="300">300 Level</SelectItem>
-                              <SelectItem value="400">400 Level</SelectItem>
-                              <SelectItem value="500">500 Level</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="units"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Units</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number" 
-                              min="1" 
-                              max="6" 
-                              {...field} 
-                              onChange={(e) => field.onChange(parseInt(e.target.value))}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
+                  {renderCourseForm()}
                   <div className="flex justify-end space-x-2">
-                    <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                    <Button type="button" variant="outline" onClick={() => { setIsAddDialogOpen(false); resetForm(); }}>
                       Cancel
                     </Button>
                     <Button type="submit" disabled={addCourseMutation.isPending}>
@@ -267,6 +290,31 @@ const CourseManagement: React.FC = () => {
             <p className="text-gray-500">No courses found. Add your first course to get started.</p>
           </div>
         )}
+
+        {/* Edit Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Edit Course</DialogTitle>
+              <DialogDescription>
+                Update the course details below
+              </DialogDescription>
+            </DialogHeader>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(handleUpdateCourse)} className="space-y-4">
+                {renderCourseForm(true)}
+                <div className="flex justify-end space-x-2">
+                  <Button type="button" variant="outline" onClick={() => { setIsEditDialogOpen(false); resetForm(); }}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={updateCourseMutation.isPending}>
+                    {updateCourseMutation.isPending ? 'Updating...' : 'Update Course'}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   );
