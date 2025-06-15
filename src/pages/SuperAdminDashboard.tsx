@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import Header from '../components/Header';
@@ -6,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Users, GraduationCap, BookOpen, Settings, Shield, Database, Plus, Download } from 'lucide-react';
+import { Users, GraduationCap, BookOpen, Shield, Plus, Download, Edit } from 'lucide-react';
 import { useStudents } from '../hooks/useStudents';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,6 +16,12 @@ import AddLecturerDialog from '../components/admin/AddLecturerDialog';
 import StudentForm from '../components/lecturer/StudentForm';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useAddStudent } from '../hooks/useStudents';
+import { useSessions, useAddSession } from '../hooks/useSessions';
+import { useSemesters, useAddSemester, useUpdateSemester, useDeleteSemester } from '../hooks/useSemesters';
+import { useCourses, useAddCourse, useUpdateCourse, useDeleteCourse, useDepartments } from '../hooks/useCourses';
+import DepartmentManagement from '../components/admin/DepartmentManagement';
+import SessionManagement from '../components/admin/SessionManagement';
+import CourseManagement from '../components/admin/CourseManagement';
 
 const SuperAdminDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -24,6 +31,10 @@ const SuperAdminDashboard: React.FC = () => {
   const [isAddStudentDialogOpen, setIsAddStudentDialogOpen] = useState(false);
   
   const { data: students } = useStudents();
+  const { data: sessions } = useSessions();
+  const { data: semesters } = useSemesters();
+  const { data: courses } = useCourses();
+  const { data: departments } = useDepartments();
   const addStudentMutation = useAddStudent();
 
   // Fetch lecturers data
@@ -32,18 +43,6 @@ const SuperAdminDashboard: React.FC = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('lecturer_profiles')
-        .select('*');
-      if (error) throw error;
-      return data;
-    }
-  });
-
-  // Fetch courses data
-  const { data: courses } = useQuery({
-    queryKey: ['courses'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('courses')
         .select('*');
       if (error) throw error;
       return data;
@@ -129,17 +128,19 @@ const SuperAdminDashboard: React.FC = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-8">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
             <TabsTrigger value="lecturers">Lecturers</TabsTrigger>
             <TabsTrigger value="students">Students</TabsTrigger>
-            <TabsTrigger value="system">System</TabsTrigger>
+            <TabsTrigger value="departments">Departments</TabsTrigger>
+            <TabsTrigger value="sessions">Sessions</TabsTrigger>
+            <TabsTrigger value="courses">Courses</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Total Users</CardTitle>
@@ -183,59 +184,97 @@ const SuperAdminDashboard: React.FC = () => {
                   <p className="text-xs text-muted-foreground">Available courses</p>
                 </CardContent>
               </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Departments</CardTitle>
+                  <BookOpen className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{departments?.length || 0}</div>
+                  <p className="text-xs text-muted-foreground">Academic departments</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Sessions</CardTitle>
+                  <BookOpen className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{sessions?.length || 0}</div>
+                  <p className="text-xs text-muted-foreground">Academic sessions</p>
+                </CardContent>
+              </Card>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>System Status</CardTitle>
-                  <CardDescription>Current system health and performance</CardDescription>
+                  <CardTitle>Recent Departments</CardTitle>
+                  <CardDescription>Latest department registrations</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm">Database Connection</span>
-                      <Badge variant="default" className="bg-green-500">Connected</Badge>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm">User Management</span>
-                      <Badge variant="default" className="bg-green-500">Active</Badge>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm">Course Management</span>
-                      <Badge variant="default" className="bg-green-500">Operational</Badge>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm">Results System</span>
-                      <Badge variant="default" className="bg-green-500">Running</Badge>
-                    </div>
+                    {departments?.slice(0, 5).map((dept) => (
+                      <div key={dept.id} className="flex items-center justify-between">
+                        <div>
+                          <span className="text-sm font-medium">{dept.name}</span>
+                          <p className="text-xs text-gray-500">{dept.code}</p>
+                        </div>
+                      </div>
+                    ))}
+                    {!departments?.length && (
+                      <p className="text-sm text-gray-500">No departments found</p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Quick Actions</CardTitle>
-                  <CardDescription>Frequently used administrative actions</CardDescription>
+                  <CardTitle>Active Sessions</CardTitle>
+                  <CardDescription>Current academic sessions</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-2 gap-3">
-                    <Button onClick={handleExportUsers} variant="outline" size="sm">
-                      <Download className="w-4 h-4 mr-1" />
-                      Export Users
-                    </Button>
-                    <Button onClick={handleExportStudents} variant="outline" size="sm">
-                      <Download className="w-4 h-4 mr-1" />
-                      Export Students
-                    </Button>
-                    <Button onClick={handleExportLecturers} variant="outline" size="sm">
-                      <Download className="w-4 h-4 mr-1" />
-                      Export Lecturers
-                    </Button>
-                    <Button variant="outline" size="sm">
-                      <Settings className="w-4 h-4 mr-1" />
-                      System Config
-                    </Button>
+                  <div className="space-y-4">
+                    {sessions?.filter(session => session.is_active).slice(0, 3).map((session) => (
+                      <div key={session.id} className="flex items-center justify-between">
+                        <div>
+                          <span className="text-sm font-medium">{session.name}</span>
+                          <p className="text-xs text-gray-500">
+                            {new Date(session.start_date).getFullYear()} - {new Date(session.end_date).getFullYear()}
+                          </p>
+                        </div>
+                        <Badge variant="default" className="bg-green-500">Active</Badge>
+                      </div>
+                    ))}
+                    {!sessions?.filter(session => session.is_active).length && (
+                      <p className="text-sm text-gray-500">No active sessions</p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Recent Courses</CardTitle>
+                  <CardDescription>Latest course additions</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {courses?.slice(0, 5).map((course) => (
+                      <div key={course.id} className="flex items-center justify-between">
+                        <div>
+                          <span className="text-sm font-medium">{course.name}</span>
+                          <p className="text-xs text-gray-500">{course.code} - {course.units} units</p>
+                        </div>
+                        <Badge variant="outline">{course.level}</Badge>
+                      </div>
+                    ))}
+                    {!courses?.length && (
+                      <p className="text-sm text-gray-500">No courses found</p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -380,31 +419,16 @@ const SuperAdminDashboard: React.FC = () => {
             </Card>
           </TabsContent>
 
-          <TabsContent value="system" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>System Configuration</CardTitle>
-                <CardDescription>Configure system-wide settings and parameters</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Button variant="outline" className="flex items-center h-20">
-                    <Database className="w-6 h-6 mr-3" />
-                    <div className="text-left">
-                      <div className="font-medium">Database Management</div>
-                      <div className="text-sm text-gray-500">Manage database connections and backups</div>
-                    </div>
-                  </Button>
-                  <Button variant="outline" className="flex items-center h-20">
-                    <Settings className="w-6 h-6 mr-3" />
-                    <div className="text-left">
-                      <div className="font-medium">System Settings</div>
-                      <div className="text-sm text-gray-500">Configure global system parameters</div>
-                    </div>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+          <TabsContent value="departments" className="space-y-6">
+            <DepartmentManagement />
+          </TabsContent>
+
+          <TabsContent value="sessions" className="space-y-6">
+            <SessionManagement />
+          </TabsContent>
+
+          <TabsContent value="courses" className="space-y-6">
+            <CourseManagement />
           </TabsContent>
 
           <TabsContent value="settings" className="space-y-6">
