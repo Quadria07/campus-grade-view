@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -6,7 +7,7 @@ import StudentProfile from '../components/student/StudentProfile';
 import StudentResults from '../components/student/StudentResults';
 import StudentProfileSettings from '../components/student/StudentProfileSettings';
 import ReportCard from '../components/student/ReportCard';
-import CourseRegistration from '../components/student/CourseRegistration';
+import StudentCourseRegistration from '../components/student/StudentCourseRegistration';
 
 const StudentDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState('profile');
@@ -62,7 +63,7 @@ const StudentDashboard: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="registration">
-            <CourseRegistration />
+            <StudentCourseRegistration />
           </TabsContent>
 
           <TabsContent value="results">

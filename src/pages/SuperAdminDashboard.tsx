@@ -6,8 +6,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Users, GraduationCap, BookOpen, Shield, Plus, Download, Edit } from 'lucide-react';
-import { useStudents } from '../hooks/useStudents';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Users, GraduationCap, BookOpen, Shield, Plus, Download, Edit, Link } from 'lucide-react';
+import { useStudents, useUpdateStudent } from '../hooks/useStudents';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import AddUserDialog from '../components/admin/AddUserDialog';
@@ -20,6 +21,7 @@ import { useCourses, useDepartments } from '../hooks/useCourses';
 import DepartmentManagement from '../components/admin/DepartmentManagement';
 import SessionManagement from '../components/admin/SessionManagement';
 import CourseManagement from '../components/admin/CourseManagement';
+import { toast } from '@/hooks/use-toast';
 
 const SuperAdminDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -27,12 +29,15 @@ const SuperAdminDashboard: React.FC = () => {
   const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
   const [isAddLecturerDialogOpen, setIsAddLecturerDialogOpen] = useState(false);
   const [isAddStudentDialogOpen, setIsAddStudentDialogOpen] = useState(false);
+  const [linkingStudentId, setLinkingStudentId] = useState<string | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<string>('');
   
   const { data: students } = useStudents();
   const { data: sessions } = useSessions();
   const { data: courses } = useCourses();
   const { data: departments } = useDepartments();
   const addStudentMutation = useAddStudent();
+  const updateStudentMutation = useUpdateStudent();
 
   // Fetch lecturers data
   const { data: lecturers } = useQuery({
@@ -40,7 +45,10 @@ const SuperAdminDashboard: React.FC = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('lecturer_profiles')
-        .select('*');
+        .select(`
+          *,
+          user:users(email, is_active)
+        `);
       if (error) throw error;
       return data;
     }
@@ -52,11 +60,17 @@ const SuperAdminDashboard: React.FC = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('users')
-        .select('*');
+        .select('*')
+        .order('created_at', { ascending: false });
       if (error) throw error;
       return data;
     }
   });
+
+  // Get users that are not linked to any student
+  const unlinkedUsers = allUsers?.filter(user => 
+    user.role === 'user' && !students?.some(student => student.user_id === user.id)
+  ) || [];
 
   const handleExportUsers = () => {
     if (!allUsers) return;
@@ -101,6 +115,32 @@ const SuperAdminDashboard: React.FC = () => {
       setIsAddStudentDialogOpen(false);
     } catch (error) {
       console.error('Failed to add student:', error);
+    }
+  };
+
+  const handleLinkStudent = async () => {
+    if (!linkingStudentId || !selectedUserId) {
+      toast({
+        title: "Error",
+        description: "Please select both student and user to link.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await updateStudentMutation.mutateAsync({
+        id: linkingStudentId,
+        user_id: selectedUserId,
+      });
+      setLinkingStudentId(null);
+      setSelectedUserId('');
+      toast({
+        title: "Success",
+        description: "Student has been linked to user account.",
+      });
+    } catch (error) {
+      console.error('Failed to link student:', error);
     }
   };
 
@@ -347,7 +387,8 @@ const SuperAdminDashboard: React.FC = () => {
                       <TableHead>Name</TableHead>
                       <TableHead>Employee ID</TableHead>
                       <TableHead>Department</TableHead>
-                      <TableHead>Phone</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Status</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -356,7 +397,12 @@ const SuperAdminDashboard: React.FC = () => {
                         <TableCell>{lecturer.first_name} {lecturer.last_name}</TableCell>
                         <TableCell>{lecturer.employee_id || 'N/A'}</TableCell>
                         <TableCell>{lecturer.department || 'N/A'}</TableCell>
-                        <TableCell>{lecturer.phone || 'N/A'}</TableCell>
+                        <TableCell>{lecturer.user?.email || 'N/A'}</TableCell>
+                        <TableCell>
+                          <Badge variant={lecturer.user?.is_active ? "default" : "destructive"}>
+                            {lecturer.user?.is_active ? "Active" : "Inactive"}
+                          </Badge>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -390,10 +436,12 @@ const SuperAdminDashboard: React.FC = () => {
                       <TableHead>Email</TableHead>
                       <TableHead>Level</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead>User Link</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {students?.slice(0, 10).map((student) => (
+                    {students?.map((student) => (
                       <TableRow key={student.id}>
                         <TableCell>{student.matric_number}</TableCell>
                         <TableCell>{student.first_name} {student.last_name}</TableCell>
@@ -402,15 +450,34 @@ const SuperAdminDashboard: React.FC = () => {
                         <TableCell>
                           <Badge variant="default">{student.status}</Badge>
                         </TableCell>
+                        <TableCell>
+                          {student.user_id ? (
+                            <Badge variant="outline" className="bg-green-50">
+                              <Link className="w-3 h-3 mr-1" />
+                              Linked
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="bg-red-50">
+                              Not Linked
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {!student.user_id && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setLinkingStudentId(student.id)}
+                            >
+                              <Link className="w-4 h-4 mr-1" />
+                              Link User
+                            </Button>
+                          )}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
-                {students && students.length > 10 && (
-                  <p className="text-sm text-gray-500 mt-2">
-                    Showing 10 of {students.length} students
-                  </p>
-                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -453,6 +520,40 @@ const SuperAdminDashboard: React.FC = () => {
             onCancel={() => setIsAddStudentDialogOpen(false)}
             isLoading={addStudentMutation.isPending}
           />
+        </DialogContent>
+      </Dialog>
+
+      {/* Link Student to User Dialog */}
+      <Dialog open={!!linkingStudentId} onOpenChange={() => setLinkingStudentId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Link Student to User Account</DialogTitle>
+            <DialogDescription>
+              Select a user account to link with this student
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a user account" />
+              </SelectTrigger>
+              <SelectContent>
+                {unlinkedUsers.map((user) => (
+                  <SelectItem key={user.id} value={user.id}>
+                    {user.email}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setLinkingStudentId(null)}>
+                Cancel
+              </Button>
+              <Button onClick={handleLinkStudent} disabled={!selectedUserId}>
+                Link Account
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

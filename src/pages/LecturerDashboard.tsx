@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import Header from '../components/Header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,26 +13,25 @@ import { useStudents } from '@/hooks/useStudents';
 import { useCourses } from '@/hooks/useCourses';
 import { useResults } from '@/hooks/useResults';
 import { useSessions } from '@/hooks/useSessions';
+import { useActivityLogs } from '@/hooks/useActivityLogs';
+import { useAuth } from '@/contexts/AuthContext';
 
 const LecturerDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState('overview');
+  const { user } = useAuth();
 
   // Fetch real data
   const { data: students = [] } = useStudents();
   const { data: courses = [] } = useCourses();
   const { data: results = [] } = useResults();
   const { data: sessions = [] } = useSessions();
+  const { data: activityLogs = [] } = useActivityLogs(user?.id, 5);
 
   // Calculate real statistics
   const activeStudents = students.filter(student => student.status === 'active');
   const activeCourses = courses.length;
   const totalResults = results.length;
   const activeSessions = sessions.filter(session => session.is_active);
-
-  // Get recent activity - last 10 results
-  const recentResults = results
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-    .slice(0, 5);
 
   const stats = [
     { 
@@ -71,7 +71,6 @@ const LecturerDashboard: React.FC = () => {
 
   const handleGenerateReports = () => {
     setActiveTab('results');
-    // This will open the results tab where reports can be generated
   };
 
   const formatTimeAgo = (dateString: string) => {
@@ -84,6 +83,21 @@ const LecturerDashboard: React.FC = () => {
     const diffInDays = Math.floor(diffInHours / 24);
     if (diffInDays === 1) return '1 day ago';
     return `${diffInDays} days ago`;
+  };
+
+  const getActivityIcon = (action: string) => {
+    switch (action.toLowerCase()) {
+      case 'create':
+      case 'add':
+        return '✅';
+      case 'update':
+      case 'edit':
+        return '✏️';
+      case 'delete':
+        return '🗑️';
+      default:
+        return '📝';
+    }
   };
 
   return (
@@ -163,39 +177,34 @@ const LecturerDashboard: React.FC = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Recent Activity</CardTitle>
-                <CardDescription>Latest results and system updates</CardDescription>
+                <CardDescription>Your latest system activities</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {recentResults.length === 0 ? (
+                  {activityLogs.length === 0 ? (
                     <div className="text-center py-8 text-gray-500">
                       <FileText className="h-8 w-8 mx-auto mb-2 text-gray-300" />
                       <p>No recent activity</p>
-                      <p className="text-sm">Upload some results to see activity here</p>
+                      <p className="text-sm">Start managing students, courses, or results to see activity here</p>
                     </div>
                   ) : (
-                    recentResults.map((result, index) => (
-                      <div key={result.id} className="flex items-center space-x-4">
-                        <div className={`w-2 h-2 rounded-full ${
-                          index === 0 ? 'bg-green-500' : 
-                          index === 1 ? 'bg-blue-500' : 'bg-yellow-500'
-                        }`}></div>
+                    activityLogs.map((log, index) => (
+                      <div key={log.id} className="flex items-center space-x-4">
+                        <div className="text-lg">{getActivityIcon(log.action)}</div>
                         <div className="flex-1">
                           <p className="text-sm font-medium">
-                            Result uploaded for {result.course?.code || 'Unknown Course'} - {result.student?.matric_number || 'Unknown Student'}
+                            {log.description || `${log.action} ${log.entity_type}`}
                           </p>
-                          <div className="flex items-center space-x-2">
-                            <p className="text-xs text-gray-500">{formatTimeAgo(result.created_at)}</p>
-                            <span className={`text-xs px-2 py-1 rounded-full ${
-                              result.grade === 'A' || result.grade === 'AB' ? 'bg-green-100 text-green-800' :
-                              result.grade === 'B' || result.grade === 'BC' ? 'bg-blue-100 text-blue-800' :
-                              result.grade === 'C' || result.grade === 'CD' ? 'bg-yellow-100 text-yellow-800' :
-                              'bg-red-100 text-red-800'
-                            }`}>
-                              Grade: {result.grade} ({result.score}%)
-                            </span>
-                          </div>
+                          <p className="text-xs text-gray-500">{formatTimeAgo(log.created_at)}</p>
                         </div>
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          log.action === 'create' || log.action === 'add' ? 'bg-green-100 text-green-800' :
+                          log.action === 'update' || log.action === 'edit' ? 'bg-blue-100 text-blue-800' :
+                          log.action === 'delete' ? 'bg-red-100 text-red-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {log.action}
+                        </span>
                       </div>
                     ))
                   )}
