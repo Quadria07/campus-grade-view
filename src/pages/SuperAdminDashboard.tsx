@@ -67,10 +67,14 @@ const SuperAdminDashboard: React.FC = () => {
     }
   });
 
-  // Get users that are not linked to any student
+  // Get users that are not linked to any student (only role = 'user')
   const unlinkedUsers = allUsers?.filter(user => 
     user.role === 'user' && !students?.some(student => student.user_id === user.id)
   ) || [];
+
+  console.log('All users:', allUsers);
+  console.log('Students:', students);
+  console.log('Unlinked users:', unlinkedUsers);
 
   const handleExportUsers = () => {
     if (!allUsers) return;
@@ -529,7 +533,7 @@ const SuperAdminDashboard: React.FC = () => {
           <DialogHeader>
             <DialogTitle>Link Student to User Account</DialogTitle>
             <DialogDescription>
-              Select a user account to link with this student
+              Select a user account to link with this student. Only showing users with 'user' role that are not already linked.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -538,18 +542,32 @@ const SuperAdminDashboard: React.FC = () => {
                 <SelectValue placeholder="Select a user account" />
               </SelectTrigger>
               <SelectContent>
-                {unlinkedUsers.map((user) => (
-                  <SelectItem key={user.id} value={user.id}>
-                    {user.email}
+                {unlinkedUsers.length > 0 ? (
+                  unlinkedUsers.map((user) => (
+                    <SelectItem key={user.id} value={user.id}>
+                      {user.email} ({user.role})
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="" disabled>
+                    No unlinked users available
                   </SelectItem>
-                ))}
+                )}
               </SelectContent>
             </Select>
+            {unlinkedUsers.length === 0 && (
+              <p className="text-sm text-gray-500">
+                No unlinked users with 'user' role found. Create a new user first or ensure existing users have the correct role.
+              </p>
+            )}
             <div className="flex justify-end space-x-2">
               <Button variant="outline" onClick={() => setLinkingStudentId(null)}>
                 Cancel
               </Button>
-              <Button onClick={handleLinkStudent} disabled={!selectedUserId}>
+              <Button 
+                onClick={handleLinkStudent} 
+                disabled={!selectedUserId || unlinkedUsers.length === 0}
+              >
                 Link Account
               </Button>
             </div>
