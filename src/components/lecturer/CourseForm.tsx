@@ -1,11 +1,11 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage, Form } from '@/components/ui/form';
-import { useDepartments, useSemesters, type Course } from '@/hooks/useCourses';
+import { useDepartments, type Course } from '@/hooks/useCourses';
+import { useSemesters } from '@/hooks/useSemesters';
 
 interface CourseFormData {
   name: string;
