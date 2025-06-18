@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { User, Mail, Phone, MapPin, Calendar, Book, GraduationCap } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Calendar, GraduationCap } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -232,31 +232,6 @@ const StudentProfile: React.FC = () => {
                   disabled={!isEditing}
                 />
               </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Book className="w-5 h-5 mr-2" />
-            Academic Summary
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid md:grid-cols-3 gap-4">
-            <div className="text-center p-4 border rounded-lg">
-              <div className="text-2xl font-bold text-primary">3.65</div>
-              <div className="text-sm text-gray-600">Current CGPA</div>
-            </div>
-            <div className="text-center p-4 border rounded-lg">
-              <div className="text-2xl font-bold text-primary">156</div>
-              <div className="text-sm text-gray-600">Credits Earned</div>
-            </div>
-            <div className="text-center p-4 border rounded-lg">
-              <div className="text-2xl font-bold text-primary">24</div>
-              <div className="text-sm text-gray-600">Courses Completed</div>
             </div>
           </div>
         </CardContent>
