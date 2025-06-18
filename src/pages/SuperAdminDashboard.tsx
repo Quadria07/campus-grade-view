@@ -39,42 +39,71 @@ const SuperAdminDashboard: React.FC = () => {
   const addStudentMutation = useAddStudent();
   const updateStudentMutation = useUpdateStudent();
 
-  // Fetch lecturers data
-  const { data: lecturers } = useQuery({
+  // Fetch lecturers data with better error handling
+  const { data: lecturers, isLoading: lecturersLoading, error: lecturersError } = useQuery({
     queryKey: ['lecturers'],
     queryFn: async () => {
+      console.log('Fetching lecturers...');
       const { data, error } = await supabase
         .from('lecturer_profiles')
         .select(`
           *,
-          user:users(email, is_active)
+          user:users!lecturer_profiles_user_id_fkey(email, is_active)
         `);
-      if (error) throw error;
+      
+      if (error) {
+        console.error('Error fetching lecturers:', error);
+        throw error;
+      }
+      
+      console.log('Lecturers data:', data);
       return data;
-    }
+    },
+    retry: 3,
+    retryDelay: 1000
   });
 
-  // Fetch all users data
-  const { data: allUsers } = useQuery({
+  // Fetch all users data with better error handling  
+  const { data: allUsers, isLoading: usersLoading, error: usersError } = useQuery({
     queryKey: ['all_users'],
     queryFn: async () => {
+      console.log('Fetching all users...');
       const { data, error } = await supabase
         .from('users')
         .select('*')
         .order('created_at', { ascending: false });
-      if (error) throw error;
+      
+      if (error) {
+        console.error('Error fetching users:', error);
+        throw error;
+      }
+      
+      console.log('All users data:', data);
       return data;
-    }
+    },
+    retry: 3,
+    retryDelay: 1000
   });
 
   // Get users that are not linked to any student (only role = 'user')
-  const unlinkedUsers = allUsers?.filter(user => 
-    user.role === 'user' && !students?.some(student => student.user_id === user.id)
-  ) || [];
-
-  console.log('All users:', allUsers);
-  console.log('Students:', students);
-  console.log('Unlinked users:', unlinkedUsers);
+  const unlinkedUsers = React.useMemo(() => {
+    if (!allUsers || !students) return [];
+    
+    const linkedUserIds = students
+      .filter(student => student.user_id)
+      .map(student => student.user_id);
+    
+    const filtered = allUsers.filter(user => 
+      user.role === 'user' && !linkedUserIds.includes(user.id)
+    );
+    
+    console.log('Unlinked users:', filtered);
+    console.log('All users count:', allUsers.length);
+    console.log('Students with user_id:', students?.filter(s => s.user_id).length);
+    console.log('Linked user IDs:', linkedUserIds);
+    
+    return filtered;
+  }, [allUsers, students]);
 
   const handleExportUsers = () => {
     if (!allUsers) return;
@@ -148,6 +177,20 @@ const SuperAdminDashboard: React.FC = () => {
     }
   };
 
+  // Debug logging
+  React.useEffect(() => {
+    console.log('Dashboard state:', {
+      usersLoading,
+      lecturersLoading,
+      usersError,
+      lecturersError,
+      allUsersCount: allUsers?.length,
+      lecturersCount: lecturers?.length,
+      studentsCount: students?.length,
+      unlinkedUsersCount: unlinkedUsers?.length
+    });
+  }, [usersLoading, lecturersLoading, usersError, lecturersError, allUsers, lecturers, students, unlinkedUsers]);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
@@ -187,8 +230,13 @@ const SuperAdminDashboard: React.FC = () => {
                   <Users className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{allUsers?.length || 0}</div>
+                  <div className="text-2xl font-bold">
+                    {usersLoading ? 'Loading...' : (allUsers?.length || 0)}
+                  </div>
                   <p className="text-xs text-muted-foreground">Active system users</p>
+                  {usersError && (
+                    <p className="text-xs text-red-500">Error loading users</p>
+                  )}
                 </CardContent>
               </Card>
 
@@ -198,8 +246,13 @@ const SuperAdminDashboard: React.FC = () => {
                   <GraduationCap className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{lecturers?.length || 0}</div>
+                  <div className="text-2xl font-bold">
+                    {lecturersLoading ? 'Loading...' : (lecturers?.length || 0)}
+                  </div>
                   <p className="text-xs text-muted-foreground">Registered lecturers</p>
+                  {lecturersError && (
+                    <p className="text-xs text-red-500">Error loading lecturers</p>
+                  )}
                 </CardContent>
               </Card>
 
@@ -338,32 +391,40 @@ const SuperAdminDashboard: React.FC = () => {
                     Export Users
                   </Button>
                 </div>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Role</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Created</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {allUsers?.map((user) => (
-                      <TableRow key={user.id}>
-                        <TableCell>{user.email}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{user.role}</Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={user.is_active ? "default" : "destructive"}>
-                            {user.is_active ? "Active" : "Inactive"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
+                {usersLoading ? (
+                  <div className="text-center py-4">Loading users...</div>
+                ) : usersError ? (
+                  <div className="text-center py-4 text-red-500">
+                    Error loading users: {usersError.message}
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Role</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Created</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {allUsers?.map((user) => (
+                        <TableRow key={user.id}>
+                          <TableCell>{user.email}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{user.role}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={user.is_active ? "default" : "destructive"}>
+                              {user.is_active ? "Active" : "Inactive"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -385,32 +446,40 @@ const SuperAdminDashboard: React.FC = () => {
                     Export Lecturers
                   </Button>
                 </div>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Employee ID</TableHead>
-                      <TableHead>Department</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {lecturers?.map((lecturer) => (
-                      <TableRow key={lecturer.id}>
-                        <TableCell>{lecturer.first_name} {lecturer.last_name}</TableCell>
-                        <TableCell>{lecturer.employee_id || 'N/A'}</TableCell>
-                        <TableCell>{lecturer.department || 'N/A'}</TableCell>
-                        <TableCell>{lecturer.user?.email || 'N/A'}</TableCell>
-                        <TableCell>
-                          <Badge variant={lecturer.user?.is_active ? "default" : "destructive"}>
-                            {lecturer.user?.is_active ? "Active" : "Inactive"}
-                          </Badge>
-                        </TableCell>
+                {lecturersLoading ? (
+                  <div className="text-center py-4">Loading lecturers...</div>
+                ) : lecturersError ? (
+                  <div className="text-center py-4 text-red-500">
+                    Error loading lecturers: {lecturersError.message}
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Employee ID</TableHead>
+                        <TableHead>Department</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Status</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {lecturers?.map((lecturer) => (
+                        <TableRow key={lecturer.id}>
+                          <TableCell>{lecturer.first_name} {lecturer.last_name}</TableCell>
+                          <TableCell>{lecturer.employee_id || 'N/A'}</TableCell>
+                          <TableCell>{lecturer.department || 'N/A'}</TableCell>
+                          <TableCell>{lecturer.user?.email || 'N/A'}</TableCell>
+                          <TableCell>
+                            <Badge variant={lecturer.user?.is_active ? "default" : "destructive"}>
+                              {lecturer.user?.is_active ? "Active" : "Inactive"}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -537,25 +606,29 @@ const SuperAdminDashboard: React.FC = () => {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <Select value={selectedUserId} onValueChange={setSelectedUserId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a user account" />
-              </SelectTrigger>
-              <SelectContent>
-                {unlinkedUsers.length > 0 ? (
-                  unlinkedUsers.map((user) => (
-                    <SelectItem key={user.id} value={user.id}>
-                      {user.email} ({user.role})
+            {usersLoading ? (
+              <div className="text-center py-4">Loading users...</div>
+            ) : (
+              <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a user account" />
+                </SelectTrigger>
+                <SelectContent>
+                  {unlinkedUsers && unlinkedUsers.length > 0 ? (
+                    unlinkedUsers.map((user) => (
+                      <SelectItem key={user.id} value={user.id}>
+                        {user.email} ({user.role})
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="" disabled>
+                      No unlinked users available
                     </SelectItem>
-                  ))
-                ) : (
-                  <SelectItem value="" disabled>
-                    No unlinked users available
-                  </SelectItem>
-                )}
-              </SelectContent>
-            </Select>
-            {unlinkedUsers.length === 0 && (
+                  )}
+                </SelectContent>
+              </Select>
+            )}
+            {unlinkedUsers && unlinkedUsers.length === 0 && !usersLoading && (
               <p className="text-sm text-gray-500">
                 No unlinked users with 'user' role found. Create a new user first or ensure existing users have the correct role.
               </p>
@@ -566,7 +639,7 @@ const SuperAdminDashboard: React.FC = () => {
               </Button>
               <Button 
                 onClick={handleLinkStudent} 
-                disabled={!selectedUserId || unlinkedUsers.length === 0}
+                disabled={!selectedUserId || !unlinkedUsers?.length}
               >
                 Link Account
               </Button>
