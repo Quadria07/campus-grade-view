@@ -186,8 +186,8 @@ export const generateResultPDF = (
       </head>
       <body>
         <div class="header">
-          <div class="university-name">Federal University of Technology</div>
-          <div class="university-address">Akure, Ondo State, Nigeria</div>
+          <div class="university-name">Global Maritime Academy</div>
+          <div class="university-address">Global Maritime Academy, P. O. Box 341, 886 Warri and Ughelli, Delta State, Nigeria</div>
           <div class="document-title">STUDENT RESULT SLIP</div>
         </div>
 

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Download, Printer } from 'lucide-react';
+import { FileText, Download, Printer, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -29,11 +29,16 @@ const ReportCard: React.FC = () => {
   const [selectedSession, setSelectedSession] = useState('');
   const [selectedSemester, setSelectedSemester] = useState('');
 
-  // Get current student data
-  const { data: currentStudent } = useQuery({
+  // Get current student data with better error handling
+  const { data: currentStudent, isLoading: studentLoading, error: studentError } = useQuery({
     queryKey: ['current_student', user?.id],
     queryFn: async () => {
-      if (!user?.id) return null;
+      console.log('Fetching student data for user:', user?.id);
+      if (!user?.id) {
+        console.log('No user ID available');
+        return null;
+      }
+      
       const { data, error } = await supabase
         .from('students')
         .select(`
@@ -45,18 +50,27 @@ const ReportCard: React.FC = () => {
 
       if (error) {
         console.error('Error fetching student:', error);
-        return null;
+        throw error;
       }
+      
+      console.log('Student data fetched:', data);
       return data;
     },
     enabled: !!user?.id,
+    retry: 3,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  // Get student results
-  const { data: allResults = [] } = useQuery({
+  // Get student results with better error handling
+  const { data: allResults = [], isLoading: resultsLoading, error: resultsError } = useQuery({
     queryKey: ['student_results', currentStudent?.id],
     queryFn: async () => {
-      if (!currentStudent?.id) return [];
+      console.log('Fetching results for student:', currentStudent?.id);
+      if (!currentStudent?.id) {
+        console.log('No student ID available');
+        return [];
+      }
+      
       const { data, error } = await supabase
         .from('results')
         .select(`
@@ -73,6 +87,8 @@ const ReportCard: React.FC = () => {
         throw error;
       }
 
+      console.log('Results fetched:', data);
+      
       // Transform the data to match the component interface
       return data.map((result: any) => ({
         id: result.id,
@@ -88,6 +104,8 @@ const ReportCard: React.FC = () => {
       }));
     },
     enabled: !!currentStudent?.id,
+    retry: 3,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   // Get unique sessions and semesters from results
@@ -186,6 +204,41 @@ const ReportCard: React.FC = () => {
     );
   };
 
+  // Show loading state
+  if (studentLoading || resultsLoading) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="text-center py-8">
+            <Loader2 className="h-12 w-12 mx-auto text-blue-500 animate-spin mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Loading Report Card</h3>
+            <p className="text-gray-500">Please wait while we fetch your academic records...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Show error state
+  if (studentError || resultsError) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="text-center py-8">
+            <FileText className="h-12 w-12 mx-auto text-red-300 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Error Loading Report Card</h3>
+            <p className="text-gray-500 mb-4">
+              There was an error loading your academic records. Please try refreshing the page.
+            </p>
+            <Button onClick={() => window.location.reload()} variant="outline">
+              Refresh Page
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (!currentStudent) {
     return (
       <Card>
@@ -217,11 +270,11 @@ const ReportCard: React.FC = () => {
               </CardDescription>
             </div>
             <div className="flex space-x-2">
-              <Button onClick={handlePrintReportCard} variant="outline" disabled={!currentStudent}>
+              <Button onClick={handlePrintReportCard} variant="outline" disabled={!currentStudent || filteredResults.length === 0}>
                 <Printer className="w-4 h-4 mr-2" />
                 Print
               </Button>
-              <Button onClick={handleDownloadReportCard} disabled={!currentStudent}>
+              <Button onClick={handleDownloadReportCard} disabled={!currentStudent || filteredResults.length === 0}>
                 <Download className="w-4 h-4 mr-2" />
                 Download
               </Button>
