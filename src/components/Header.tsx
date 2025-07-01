@@ -74,16 +74,16 @@ const Header: React.FC = () => {
     <header className="bg-white border-b border-gray-200 shadow-sm">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-6">
-            <Link to="/" className="flex items-center space-x-3">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden">
+          <div className="flex items-center space-x-3 sm:space-x-6">
+            <Link to="/" className="flex items-center space-x-2 sm:space-x-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-lg flex items-center justify-center overflow-hidden shadow-sm">
                 <img 
                   src="https://gma.edu.ng/wp-content/uploads/2019/10/logo-use3.jpg?ed8dcc&ed8dcc" 
                   alt="Global Maritime Academy Logo"
                   className="w-full h-full object-contain"
                 />
               </div>
-              <span className="text-2xl font-bold text-primary">Global Maritime Academy</span>
+              <span className="text-lg sm:text-xl md:text-2xl font-bold text-primary">Global Maritime Academy</span>
             </Link>
             
             {isOnDashboard && user && (
@@ -98,13 +98,13 @@ const Header: React.FC = () => {
             )}
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-4">
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="flex items-center space-x-2">
                     <User className="w-4 h-4" />
-                    <span className="hidden md:inline">{getUserDisplayName()}</span>
+                    <span className="hidden sm:inline">{getUserDisplayName()}</span>
                     <span className={`text-xs hidden md:inline ${
                       user.role === 'super_admin' ? 'text-red-600 font-semibold' : 'text-gray-500'
                     }`}>

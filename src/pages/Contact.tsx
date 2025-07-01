@@ -134,7 +134,7 @@ const Contact: React.FC = () => {
                     <Phone className="w-5 h-5 text-primary" />
                     <div>
                       <p className="font-medium">Phone</p>
-                      <p className="text-gray-600">+234 800 123 4567</p>
+                      <p className="text-gray-600">+234 902 508 0397</p>
                     </div>
                   </div>
                   
@@ -143,8 +143,7 @@ const Contact: React.FC = () => {
                     <div>
                       <p className="font-medium">Address</p>
                       <p className="text-gray-600">
-                        University Road, Academic City<br />
-                        Lagos, Nigeria
+                        Global Maritime Academy, P. O. Box 341, 886 Warri and Ughelli, Delta State, Nigeria
                       </p>
                     </div>
                   </div>

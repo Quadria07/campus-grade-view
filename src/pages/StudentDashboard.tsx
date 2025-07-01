@@ -27,29 +27,33 @@ const StudentDashboard: React.FC = () => {
     <div className="min-h-screen bg-gray-50">
       <Header />
       
-      <main className="container mx-auto px-4 py-8">
-        <div className="mb-8 animate-fade-in">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Student Dashboard</h1>
-          <p className="text-gray-600">Access your academic information, results, and account settings</p>
+      <main className="container mx-auto px-4 py-4 sm:py-8">
+        <div className="mb-6 sm:mb-8 animate-fade-in">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">Student Dashboard</h1>
+          <p className="text-sm sm:text-base text-gray-600">Access your academic information, results, and account settings</p>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-8">
-            <TabsTrigger value="profile" className="flex items-center">
-              <User className="w-4 h-4 mr-2" />
-              Profile
+          <TabsList className="grid w-full grid-cols-4 mb-6 sm:mb-8 h-auto p-1">
+            <TabsTrigger value="profile" className="flex flex-col sm:flex-row items-center text-xs sm:text-sm px-2 py-2 sm:py-3">
+              <User className="w-3 h-3 sm:w-4 sm:h-4 mb-1 sm:mb-0 sm:mr-2" />
+              <span className="hidden sm:inline">Profile</span>
+              <span className="sm:hidden">Profile</span>
             </TabsTrigger>
-            <TabsTrigger value="results" className="flex items-center">
-              <BarChart3 className="w-4 h-4 mr-2" />
-              Results
+            <TabsTrigger value="results" className="flex flex-col sm:flex-row items-center text-xs sm:text-sm px-2 py-2 sm:py-3">
+              <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4 mb-1 sm:mb-0 sm:mr-2" />
+              <span className="hidden sm:inline">Results</span>
+              <span className="sm:hidden">Results</span>
             </TabsTrigger>
-            <TabsTrigger value="reportcard" className="flex items-center">
-              <FileText className="w-4 h-4 mr-2" />
-              Report Card
+            <TabsTrigger value="reportcard" className="flex flex-col sm:flex-row items-center text-xs sm:text-sm px-2 py-2 sm:py-3">
+              <FileText className="w-3 h-3 sm:w-4 sm:h-4 mb-1 sm:mb-0 sm:mr-2" />
+              <span className="hidden sm:inline">Report Card</span>
+              <span className="sm:hidden">Report</span>
             </TabsTrigger>
-            <TabsTrigger value="settings" className="flex items-center">
-              <User className="w-4 h-4 mr-2" />
-              Settings
+            <TabsTrigger value="settings" className="flex flex-col sm:flex-row items-center text-xs sm:text-sm px-2 py-2 sm:py-3">
+              <User className="w-3 h-3 sm:w-4 sm:h-4 mb-1 sm:mb-0 sm:mr-2" />
+              <span className="hidden sm:inline">Settings</span>
+              <span className="sm:hidden">Settings</span>
             </TabsTrigger>
           </TabsList>
 

@@ -46,7 +46,7 @@ const ReportCard: React.FC = () => {
           department:departments!students_department_id_fkey(name)
         `)
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching student:', error);
@@ -264,26 +264,26 @@ const ReportCard: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <Card>
         <CardHeader>
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <div>
-              <CardTitle className="flex items-center">
-                <FileText className="w-5 h-5 mr-2" />
+              <CardTitle className="flex items-center text-lg sm:text-xl">
+                <FileText className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                 Report Card
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-sm">
                 View consolidated report card by semester and session
               </CardDescription>
             </div>
-            <div className="flex space-x-2">
-              <Button onClick={handlePrintReportCard} variant="outline" disabled={!currentStudent || filteredResults.length === 0}>
-                <Printer className="w-4 h-4 mr-2" />
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+              <Button onClick={handlePrintReportCard} variant="outline" disabled={!currentStudent || filteredResults.length === 0} className="text-sm">
+                <Printer className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
                 Print
               </Button>
-              <Button onClick={handleDownloadReportCard} disabled={!currentStudent || filteredResults.length === 0}>
-                <Download className="w-4 h-4 mr-2" />
+              <Button onClick={handleDownloadReportCard} disabled={!currentStudent || filteredResults.length === 0} className="text-sm">
+                <Download className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
                 Download
               </Button>
             </div>
@@ -292,9 +292,9 @@ const ReportCard: React.FC = () => {
         <CardContent>
           {/* Period Selection */}
           {(sessions.length > 0 || semesters.length > 0) && (
-            <div className="flex space-x-4 mb-6">
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 mb-4 sm:mb-6">
               <Select value={selectedSession} onValueChange={setSelectedSession}>
-                <SelectTrigger className="w-48">
+                <SelectTrigger className="w-full sm:w-48">
                   <SelectValue placeholder="Select session" />
                 </SelectTrigger>
                 <SelectContent>
@@ -304,7 +304,7 @@ const ReportCard: React.FC = () => {
                 </SelectContent>
               </Select>
               <Select value={selectedSemester} onValueChange={setSelectedSemester}>
-                <SelectTrigger className="w-48">
+                <SelectTrigger className="w-full sm:w-48">
                   <SelectValue placeholder="Select semester" />
                 </SelectTrigger>
                 <SelectContent>
@@ -317,83 +317,85 @@ const ReportCard: React.FC = () => {
           )}
 
           {/* Student Info Header */}
-          <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-            <div className="grid md:grid-cols-2 gap-4">
+          <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-gray-50 rounded-lg">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
               <div>
-                <h3 className="font-semibold text-lg">
+                <h3 className="font-semibold text-base sm:text-lg">
                   {currentStudent?.first_name} {currentStudent?.last_name}
                 </h3>
-                <p className="text-gray-600">Matric No: {currentStudent?.matric_number}</p>
-                <p className="text-gray-600">Department: {getDepartmentName()}</p>
+                <p className="text-sm sm:text-base text-gray-600">Matric No: {currentStudent?.matric_number}</p>
+                <p className="text-sm sm:text-base text-gray-600">Department: {getDepartmentName()}</p>
               </div>
               <div>
-                <p className="text-gray-600">Session: {selectedSession || 'N/A'}</p>
-                <p className="text-gray-600">Semester: {selectedSemester || 'N/A'}</p>
-                <p className="text-gray-600">Level: {currentStudent?.level}</p>
+                <p className="text-sm sm:text-base text-gray-600">Session: {selectedSession || 'N/A'}</p>
+                <p className="text-sm sm:text-base text-gray-600">Semester: {selectedSemester || 'N/A'}</p>
+                <p className="text-sm sm:text-base text-gray-600">Level: {currentStudent?.level}</p>
               </div>
             </div>
           </div>
 
-          {/* Summary Cards */}
-          <div className="grid md:grid-cols-3 gap-4 mb-6">
+          {/* Summary Cards - Removed Average Score */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
             <Card>
-              <CardContent className="p-4 text-center">
-                <div className="text-2xl font-bold text-primary">{calculateGPA()}</div>
-                <div className="text-sm text-gray-600">Semester GPA</div>
+              <CardContent className="p-3 sm:p-4 text-center">
+                <div className="text-xl sm:text-2xl font-bold text-primary">{calculateGPA()}</div>
+                <div className="text-xs sm:text-sm text-gray-600">Semester GPA</div>
               </CardContent>
             </Card>
             <Card>
-              <CardContent className="p-4 text-center">
-                <div className="text-2xl font-bold text-primary">{calculateCGPA()}</div>
-                <div className="text-sm text-gray-600">Cumulative GPA</div>
+              <CardContent className="p-3 sm:p-4 text-center">
+                <div className="text-xl sm:text-2xl font-bold text-primary">{calculateCGPA()}</div>
+                <div className="text-xs sm:text-sm text-gray-600">Cumulative GPA</div>
               </CardContent>
             </Card>
             <Card>
-              <CardContent className="p-4 text-center">
-                <div className="text-2xl font-bold text-primary">{filteredResults.length}</div>
-                <div className="text-sm text-gray-600">Courses</div>
+              <CardContent className="p-3 sm:p-4 text-center">
+                <div className="text-xl sm:text-2xl font-bold text-primary">{filteredResults.length}</div>
+                <div className="text-xs sm:text-sm text-gray-600">Courses</div>
               </CardContent>
             </Card>
           </div>
 
           {/* Results Table */}
           {filteredResults.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Course Code</TableHead>
-                  <TableHead>Course Title</TableHead>
-                  <TableHead className="text-center">Credit Units</TableHead>
-                  <TableHead className="text-center">Score</TableHead>
-                  <TableHead className="text-center">Grade</TableHead>
-                  <TableHead className="text-center">Grade Point</TableHead>
-                  <TableHead>Remark</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredResults.map((result) => (
-                  <TableRow key={result.id}>
-                    <TableCell className="font-medium">{result.courseCode}</TableCell>
-                    <TableCell>{result.courseTitle}</TableCell>
-                    <TableCell className="text-center">{result.creditUnits}</TableCell>
-                    <TableCell className="text-center font-bold">{result.score}</TableCell>
-                    <TableCell className="text-center">
-                      <Badge className={getGradeColor(result.grade)}>
-                        {result.grade}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-center">{result.gradePoint}</TableCell>
-                    <TableCell>
-                      <Badge variant={result.remark === 'Excellent' ? 'default' : 'secondary'}>
-                        {result.remark}
-                      </Badge>
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-xs sm:text-sm">Course Code</TableHead>
+                    <TableHead className="text-xs sm:text-sm">Course Title</TableHead>
+                    <TableHead className="text-center text-xs sm:text-sm">Credit Units</TableHead>
+                    <TableHead className="text-center text-xs sm:text-sm">Score</TableHead>
+                    <TableHead className="text-center text-xs sm:text-sm">Grade</TableHead>
+                    <TableHead className="text-center text-xs sm:text-sm">Grade Point</TableHead>
+                    <TableHead className="text-xs sm:text-sm">Remark</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredResults.map((result) => (
+                    <TableRow key={result.id}>
+                      <TableCell className="font-medium text-xs sm:text-sm">{result.courseCode}</TableCell>
+                      <TableCell className="text-xs sm:text-sm">{result.courseTitle}</TableCell>
+                      <TableCell className="text-center text-xs sm:text-sm">{result.creditUnits}</TableCell>
+                      <TableCell className="text-center font-bold text-xs sm:text-sm">{result.score}</TableCell>
+                      <TableCell className="text-center">
+                        <Badge className={`${getGradeColor(result.grade)} text-xs`}>
+                          {result.grade}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-center text-xs sm:text-sm">{result.gradePoint}</TableCell>
+                      <TableCell>
+                        <Badge variant={result.remark === 'Excellent' ? 'default' : 'secondary'} className="text-xs">
+                          {result.remark}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           ) : (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-6 sm:py-8 text-gray-500 text-sm sm:text-base">
               {allResults.length === 0 
                 ? "No results available for your matric number."
                 : `No results found for ${selectedSemester} Semester, ${selectedSession} session.`
@@ -402,9 +404,9 @@ const ReportCard: React.FC = () => {
           )}
 
           {/* Grade Scale */}
-          <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-            <h4 className="font-medium mb-2">Grade Scale</h4>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+          <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-gray-50 rounded-lg">
+            <h4 className="font-medium mb-2 text-sm sm:text-base">Grade Scale</h4>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 text-xs sm:text-sm">
               <div>A (90-100): 4.0</div>
               <div>AB (80-89): 3.5</div>
               <div>B (70-79): 3.0</div>
