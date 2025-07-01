@@ -76,18 +76,21 @@ const Header: React.FC = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3 sm:space-x-6">
             <Link to="/" className="flex items-center space-x-2 sm:space-x-3">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-lg flex items-center justify-center overflow-hidden shadow-sm">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 rounded-lg flex items-center justify-center overflow-hidden shadow-sm">
                 <img 
                   src="https://gma.edu.ng/wp-content/uploads/2019/10/logo-use3.jpg?ed8dcc&ed8dcc" 
                   alt="Global Maritime Academy Logo"
                   className="w-full h-full object-contain"
                 />
               </div>
-              <span className="text-lg sm:text-xl md:text-2xl font-bold text-primary">Global Maritime Academy</span>
+              <div className="flex flex-col">
+                <span className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-primary leading-tight">Global Maritime Academy</span>
+                <span className="text-xs sm:text-sm text-gray-600 hidden sm:block">Excellence in Maritime Education</span>
+              </div>
             </Link>
             
             {isOnDashboard && user && (
-              <nav className="hidden md:flex space-x-6">
+              <nav className="hidden lg:flex space-x-6">
                 <span className="text-sm text-gray-600">
                   Welcome back, <span className="font-medium">{getUserDisplayName()}</span>
                   {user.role === 'super_admin' && (
@@ -104,8 +107,8 @@ const Header: React.FC = () => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="flex items-center space-x-2">
                     <User className="w-4 h-4" />
-                    <span className="hidden sm:inline">{getUserDisplayName()}</span>
-                    <span className={`text-xs hidden md:inline ${
+                    <span className="hidden sm:inline text-sm lg:text-base">{getUserDisplayName()}</span>
+                    <span className={`text-xs hidden lg:inline ${
                       user.role === 'super_admin' ? 'text-red-600 font-semibold' : 'text-gray-500'
                     }`}>
                       ({getUserRole()})
@@ -137,10 +140,10 @@ const Header: React.FC = () => {
               </DropdownMenu>
             ) : (
               <div className="flex items-center space-x-2">
-                <Button variant="ghost" asChild>
+                <Button variant="ghost" asChild className="text-sm">
                   <Link to="/student-login">Student Login</Link>
                 </Button>
-                <Button variant="ghost" asChild>
+                <Button variant="ghost" asChild className="text-sm">
                   <Link to="/lecturer-login">Lecturer Login</Link>
                 </Button>
               </div>

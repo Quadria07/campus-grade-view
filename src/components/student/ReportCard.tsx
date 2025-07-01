@@ -106,11 +106,19 @@ const ReportCard: React.FC = () => {
     enabled: !!currentStudent?.id,
     retry: 3,
     staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnMount: true, // Always refetch when component mounts
+    refetchOnWindowFocus: false, // Don't refetch on window focus
   });
 
   // Get unique sessions and semesters from results
-  const sessions = [...new Set(allResults.map(result => result.session))].filter(Boolean);
-  const semesters = [...new Set(allResults.map(result => result.semester))].filter(Boolean);
+  const sessions = React.useMemo(() => 
+    [...new Set(allResults.map(result => result.session))].filter(Boolean), 
+    [allResults]
+  );
+  const semesters = React.useMemo(() => 
+    [...new Set(allResults.map(result => result.semester))].filter(Boolean), 
+    [allResults]
+  );
 
   // Set default values when data loads
   React.useEffect(() => {
@@ -122,9 +130,11 @@ const ReportCard: React.FC = () => {
     }
   }, [sessions, semesters, selectedSession, selectedSemester]);
 
-  const filteredResults = allResults.filter(result => 
-    (!selectedSession || result.session === selectedSession) && 
-    (!selectedSemester || result.semester === selectedSemester)
+  const filteredResults = React.useMemo(() => 
+    allResults.filter(result => 
+      (!selectedSession || result.session === selectedSession) && 
+      (!selectedSemester || result.semester === selectedSemester)
+    ), [allResults, selectedSession, selectedSemester]
   );
 
   const getGradePoint = (grade: string): number => {
@@ -215,51 +225,58 @@ const ReportCard: React.FC = () => {
   // Show loading state
   if (studentLoading || resultsLoading) {
     return (
-      <Card>
-        <CardContent className="pt-6">
-          <div className="text-center py-8">
-            <Loader2 className="h-12 w-12 mx-auto text-blue-500 animate-spin mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Loading Report Card</h3>
-            <p className="text-gray-500">Please wait while we fetch your academic records...</p>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center py-8">
+              <Loader2 className="h-12 w-12 mx-auto text-blue-500 animate-spin mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Loading Report Card</h3>
+              <p className="text-gray-500">Please wait while we fetch your academic records...</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
   // Show error state
   if (studentError || resultsError) {
+    console.error('Report card error:', studentError || resultsError);
     return (
-      <Card>
-        <CardContent className="pt-6">
-          <div className="text-center py-8">
-            <FileText className="h-12 w-12 mx-auto text-red-300 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Error Loading Report Card</h3>
-            <p className="text-gray-500 mb-4">
-              There was an error loading your academic records. Please try refreshing the page.
-            </p>
-            <Button onClick={() => window.location.reload()} variant="outline">
-              Refresh Page
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center py-8">
+              <FileText className="h-12 w-12 mx-auto text-red-300 mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Error Loading Report Card</h3>
+              <p className="text-gray-500 mb-4">
+                There was an error loading your academic records. Please try again.
+              </p>
+              <Button onClick={() => window.location.reload()} variant="outline">
+                Refresh Page
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
   if (!currentStudent) {
     return (
-      <Card>
-        <CardContent className="pt-6">
-          <div className="text-center py-8">
-            <FileText className="h-12 w-12 mx-auto text-gray-300 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No Student Profile Found</h3>
-            <p className="text-gray-500">
-              Please contact the administrator to set up your student profile.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center py-8">
+              <FileText className="h-12 w-12 mx-auto text-gray-300 mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No Student Profile Found</h3>
+              <p className="text-gray-500">
+                Please contact the administrator to set up your student profile.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
@@ -334,7 +351,7 @@ const ReportCard: React.FC = () => {
             </div>
           </div>
 
-          {/* Summary Cards - Removed Average Score */}
+          {/* Summary Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
             <Card>
               <CardContent className="p-3 sm:p-4 text-center">

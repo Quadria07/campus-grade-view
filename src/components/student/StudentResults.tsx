@@ -1,243 +1,193 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { BarChart3, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { BarChart3, TrendingUp, Award, BookOpen } from 'lucide-react';
+import StudentResultsOverview from './StudentResultsOverview';
 
 const StudentResults: React.FC = () => {
   const { user } = useAuth();
+  const [selectedSession, setSelectedSession] = useState('');
+  const [selectedSemester, setSelectedSemester] = useState('');
 
   // Get current student data
-  const { data: currentStudent } = useQuery({
+  const { data: currentStudent, isLoading: studentLoading } = useQuery({
     queryKey: ['current_student', user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
+      
       const { data, error } = await supabase
         .from('students')
-        .select('*')
+        .select(`
+          *,
+          department:departments!students_department_id_fkey(name)
+        `)
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (error) {
-        console.error('Error fetching student:', error);
-        return null;
-      }
+      if (error) throw error;
       return data;
     },
     enabled: !!user?.id,
   });
 
   // Get student results
-  const { data: results = [] } = useQuery({
+  const { data: allResults = [], isLoading: resultsLoading } = useQuery({
     queryKey: ['student_results', currentStudent?.id],
     queryFn: async () => {
       if (!currentStudent?.id) return [];
+      
       const { data, error } = await supabase
         .from('results')
         .select(`
           *,
-          course:courses(code, name, units, level),
-          semester:semesters(name, code),
+          course:courses(code, name, units),
+          semester:semesters(name),
           session:sessions(name)
         `)
         .eq('student_id', currentStudent.id)
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching results:', error);
-        throw error;
-      }
-
-      return data;
+      if (error) throw error;
+      return data || [];
     },
     enabled: !!currentStudent?.id,
   });
 
-  if (!currentStudent) {
+  // Get unique sessions and semesters
+  const sessions = [...new Set(allResults.map(result => result.session?.name).filter(Boolean))];
+  const semesters = [...new Set(allResults.map(result => result.semester?.name).filter(Boolean))];
+
+  // Filter results based on selected session and semester
+  const filteredResults = allResults.filter(result => 
+    (!selectedSession || result.session?.name === selectedSession) && 
+    (!selectedSemester || result.semester?.name === selectedSemester)
+  );
+
+  const getGradeColor = (grade: string) => {
+    if (grade.startsWith('A')) return 'text-green-600 bg-green-50';
+    if (grade.startsWith('B')) return 'text-blue-600 bg-blue-50';
+    if (grade.startsWith('C')) return 'text-yellow-600 bg-yellow-50';
+    if (grade.startsWith('D')) return 'text-orange-600 bg-orange-50';
+    return 'text-red-600 bg-red-50';
+  };
+
+  if (studentLoading || resultsLoading) {
     return (
-      <Card>
-        <CardContent className="pt-6">
-          <div className="text-center py-8">
-            <BookOpen className="h-12 w-12 mx-auto text-gray-300 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No Student Profile Found</h3>
-            <p className="text-gray-500">
-              Please contact the administrator to set up your student profile with a matric number.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="space-y-6">
+        <div className="text-center py-8">
+          <Loader2 className="h-12 w-12 mx-auto text-blue-500 animate-spin mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Loading Results</h3>
+          <p className="text-gray-500">Please wait while we fetch your academic records...</p>
+        </div>
+      </div>
     );
   }
 
-  // Calculate statistics
-  const totalCourses = results.length;
-  const averageScore = results.length > 0 
-    ? Math.round(results.reduce((sum, result) => sum + result.score, 0) / results.length)
-    : 0;
-  
-  const gradeDistribution = results.reduce((acc, result) => {
-    acc[result.grade] = (acc[result.grade] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-
-  const getGradeColor = (grade: string) => {
-    switch (grade) {
-      case 'A': return 'bg-green-500';
-      case 'AB': return 'bg-green-400';
-      case 'B': return 'bg-blue-500';
-      case 'BC': return 'bg-blue-400';
-      case 'C': return 'bg-yellow-500';
-      case 'CD': return 'bg-yellow-400';
-      case 'D': return 'bg-orange-500';
-      case 'E': return 'bg-red-400';
-      case 'F': return 'bg-red-500';
-      default: return 'bg-gray-500';
-    }
-  };
-
-  const getScoreColor = (score: number) => {
-    if (score >= 90) return 'text-green-600';
-    if (score >= 80) return 'text-green-500';
-    if (score >= 70) return 'text-blue-500';
-    if (score >= 60) return 'text-yellow-600';
-    if (score >= 50) return 'text-orange-500';
-    return 'text-red-500';
-  };
+  if (!currentStudent) {
+    return (
+      <div className="text-center py-8">
+        <BarChart3 className="h-12 w-12 mx-auto text-gray-300 mb-4" />
+        <h3 className="text-lg font-medium text-gray-900 mb-2">No Student Profile Found</h3>
+        <p className="text-gray-500">Please contact the administrator to set up your student profile.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Courses</CardTitle>
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalCourses}</div>
-            <p className="text-xs text-muted-foreground">
-              Results available
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Average Score</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className={`text-2xl font-bold ${getScoreColor(averageScore)}`}>
-              {averageScore}%
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Overall performance
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Matric Number</CardTitle>
-            <Award className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-lg font-bold">{currentStudent.matric_number}</div>
-            <p className="text-xs text-muted-foreground">
-              Student ID
-            </p>
-          </CardContent>
-        </Card>
+      <div>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Academic Results</h2>
+        <p className="text-gray-600">View your academic performance and grades</p>
       </div>
 
-      {/* Grade Distribution */}
-      {results.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Grade Distribution</CardTitle>
-            <CardDescription>Your performance across all courses</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {Object.entries(gradeDistribution).map(([grade, count]) => (
-                <div key={grade} className="flex items-center space-x-2">
-                  <Badge variant="outline" className={`${getGradeColor(grade)} text-white`}>
-                    {grade}
-                  </Badge>
-                  <span className="text-sm">{count} course{count !== 1 ? 's' : ''}</span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <StudentResultsOverview />
 
-      {/* Results Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Academic Results</CardTitle>
+          <CardTitle className="flex items-center">
+            <BarChart3 className="w-5 h-5 mr-2" />
+            Detailed Results
+          </CardTitle>
           <CardDescription>
-            Your course results for matric number: {currentStudent.matric_number}
+            View your course results filtered by session and semester
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {results.length === 0 ? (
-            <div className="text-center py-8">
-              <BarChart3 className="h-8 w-8 mx-auto text-gray-300 mb-2" />
-              <p className="text-gray-500">No results available</p>
-              <p className="text-sm text-gray-400">Your course results will appear here once they are uploaded</p>
+          {/* Filter Controls */}
+          {(sessions.length > 0 || semesters.length > 0) && (
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 mb-6">
+              <Select value={selectedSession} onValueChange={setSelectedSession}>
+                <SelectTrigger className="w-full sm:w-48">
+                  <SelectValue placeholder="All sessions" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All Sessions</SelectItem>
+                  {sessions.map(session => (
+                    <SelectItem key={session} value={session}>{session}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={selectedSemester} onValueChange={setSelectedSemester}>
+                <SelectTrigger className="w-full sm:w-48">
+                  <SelectValue placeholder="All semesters" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All Semesters</SelectItem>
+                  {semesters.map(semester => (
+                    <SelectItem key={semester} value={semester}>{semester} Semester</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {/* Results Table */}
+          {filteredResults.length > 0 ? (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Course Code</TableHead>
+                    <TableHead>Course Title</TableHead>
+                    <TableHead className="text-center">Score</TableHead>
+                    <TableHead className="text-center">Grade</TableHead>
+                    <TableHead className="text-center">Units</TableHead>
+                    <TableHead>Session</TableHead>
+                    <TableHead>Semester</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredResults.map((result) => (
+                    <TableRow key={result.id}>
+                      <TableCell className="font-medium">{result.course?.code}</TableCell>
+                      <TableCell>{result.course?.name}</TableCell>
+                      <TableCell className="text-center font-bold">{result.score}</TableCell>
+                      <TableCell className="text-center">
+                        <Badge className={`${getGradeColor(result.grade)}`}>
+                          {result.grade}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-center">{result.course?.units}</TableCell>
+                      <TableCell>{result.session?.name}</TableCell>
+                      <TableCell>{result.semester?.name}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Course Code</TableHead>
-                  <TableHead>Course Title</TableHead>
-                  <TableHead>Level</TableHead>
-                  <TableHead>Units</TableHead>
-                  <TableHead>Score</TableHead>
-                  <TableHead>Grade</TableHead>
-                  <TableHead>Session</TableHead>
-                  <TableHead>Semester</TableHead>
-                  <TableHead>Remarks</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {results.map((result) => (
-                  <TableRow key={result.id}>
-                    <TableCell className="font-medium">
-                      {result.course?.code}
-                    </TableCell>
-                    <TableCell>{result.course?.name}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">
-                        {result.course?.level}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{result.course?.units}</TableCell>
-                    <TableCell>
-                      <span className={`font-semibold ${getScoreColor(result.score)}`}>
-                        {result.score}%
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={`${getGradeColor(result.grade)} text-white`}>
-                        {result.grade}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{result.session?.name}</TableCell>
-                    <TableCell>{result.semester?.name}</TableCell>
-                    <TableCell className="text-sm text-gray-600">
-                      {result.remarks || 'No remarks'}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <div className="text-center py-8 text-gray-500">
+              {allResults.length === 0 
+                ? "No results available for your matric number."
+                : "No results found for the selected filters."
+              }
+            </div>
           )}
         </CardContent>
       </Card>
