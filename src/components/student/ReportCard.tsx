@@ -164,13 +164,21 @@ const ReportCard: React.FC = () => {
     return 'text-red-600 bg-red-50';
   };
 
+  // Helper function to get department name as string
+  const getDepartmentName = () => {
+    if (!currentStudent?.department) return 'N/A';
+    return typeof currentStudent.department === 'string' 
+      ? currentStudent.department 
+      : currentStudent.department.name || 'N/A';
+  };
+
   const handleDownloadReportCard = () => {
     if (!currentStudent) return;
     
     const studentInfo = {
       name: `${currentStudent.first_name} ${currentStudent.last_name}`,
       matricNumber: currentStudent.matric_number,
-      department: currentStudent.department?.name || currentStudent.department || 'N/A',
+      department: getDepartmentName(),
       level: currentStudent.level,
       session: selectedSession,
       semester: selectedSemester
@@ -190,7 +198,7 @@ const ReportCard: React.FC = () => {
     const studentInfo = {
       name: `${currentStudent.first_name} ${currentStudent.last_name}`,
       matricNumber: currentStudent.matric_number,
-      department: currentStudent.department?.name || currentStudent.department || 'N/A',
+      department: getDepartmentName(),
       level: currentStudent.level,
       session: selectedSession,
       semester: selectedSemester
@@ -316,7 +324,7 @@ const ReportCard: React.FC = () => {
                   {currentStudent?.first_name} {currentStudent?.last_name}
                 </h3>
                 <p className="text-gray-600">Matric No: {currentStudent?.matric_number}</p>
-                <p className="text-gray-600">Department: {currentStudent?.department?.name || currentStudent?.department || 'N/A'}</p>
+                <p className="text-gray-600">Department: {getDepartmentName()}</p>
               </div>
               <div>
                 <p className="text-gray-600">Session: {selectedSession || 'N/A'}</p>
