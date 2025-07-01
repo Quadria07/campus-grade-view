@@ -93,13 +93,15 @@ const LecturerDashboard: React.FC = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-4 sm:space-y-6">
-          <TabsList className="grid w-full grid-cols-5 h-auto p-1 bg-white shadow-sm rounded-lg overflow-x-auto">
-            <TabsTrigger value="overview" className="text-xs sm:text-sm px-1 sm:px-2 py-2 whitespace-nowrap">Overview</TabsTrigger>
-            <TabsTrigger value="students" className="text-xs sm:text-sm px-1 sm:px-2 py-2 whitespace-nowrap">Students</TabsTrigger>
-            <TabsTrigger value="courses" className="text-xs sm:text-sm px-1 sm:px-2 py-2 whitespace-nowrap">Courses</TabsTrigger>
-            <TabsTrigger value="results" className="text-xs sm:text-sm px-1 sm:px-2 py-2 whitespace-nowrap">Results</TabsTrigger>
-            <TabsTrigger value="profile" className="text-xs sm:text-sm px-1 sm:px-2 py-2 whitespace-nowrap">Profile</TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto">
+            <TabsList className="grid w-full grid-cols-5 min-w-[400px] h-auto p-1 bg-white shadow-sm rounded-lg">
+              <TabsTrigger value="overview" className="text-xs sm:text-sm px-1 sm:px-2 py-2 whitespace-nowrap">Overview</TabsTrigger>
+              <TabsTrigger value="students" className="text-xs sm:text-sm px-1 sm:px-2 py-2 whitespace-nowrap">Students</TabsTrigger>
+              <TabsTrigger value="courses" className="text-xs sm:text-sm px-1 sm:px-2 py-2 whitespace-nowrap">Courses</TabsTrigger>
+              <TabsTrigger value="results" className="text-xs sm:text-sm px-1 sm:px-2 py-2 whitespace-nowrap">Results</TabsTrigger>
+              <TabsTrigger value="profile" className="text-xs sm:text-sm px-1 sm:px-2 py-2 whitespace-nowrap">Profile</TabsTrigger>
+            </TabsList>
+          </div>
 
           <div className="bg-white rounded-lg shadow-sm min-h-[500px]">
             <TabsContent value="overview" className="m-0 p-4 sm:p-6 space-y-6">

@@ -76,7 +76,7 @@ const Header: React.FC = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3 sm:space-x-6">
             <Link to="/" className="flex items-center space-x-2 sm:space-x-3">
-              <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 rounded-lg flex items-center justify-center overflow-hidden shadow-sm">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 xl:w-32 xl:h-32 rounded-lg flex items-center justify-center overflow-hidden shadow-sm">
                 <img 
                   src="https://gma.edu.ng/wp-content/uploads/2019/10/logo-use3.jpg?ed8dcc&ed8dcc" 
                   alt="Global Maritime Academy Logo"
@@ -84,8 +84,8 @@ const Header: React.FC = () => {
                 />
               </div>
               <div className="flex flex-col">
-                <span className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-primary leading-tight">Global Maritime Academy</span>
-                <span className="text-xs sm:text-sm text-gray-600 hidden sm:block">Excellence in Maritime Education</span>
+                <span className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-bold text-primary leading-tight">Global Maritime Academy</span>
+                <span className="text-xs sm:text-sm lg:text-base text-gray-600 hidden sm:block">Excellence in Maritime Education</span>
               </div>
             </Link>
             
