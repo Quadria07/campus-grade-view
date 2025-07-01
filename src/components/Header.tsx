@@ -56,6 +56,18 @@ const Header: React.FC = () => {
     }
   };
 
+  const handleSettingsClick = () => {
+    const dashboardRoute = getDashboardRoute();
+    navigate(dashboardRoute);
+    // Use a small delay to ensure navigation completes, then trigger tab change
+    setTimeout(() => {
+      const event = new CustomEvent('change-dashboard-tab', { 
+        detail: user?.role === 'lecturer' ? 'profile' : 'settings' 
+      });
+      window.dispatchEvent(event);
+    }, 100);
+  };
+
   const isOnDashboard = location.pathname.includes('dashboard');
 
   return (
@@ -63,8 +75,15 @@ const Header: React.FC = () => {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-6">
-            <Link to="/" className="text-2xl font-bold text-primary">
-              EduPortal
+            <Link to="/" className="flex items-center space-x-3">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden">
+                <img 
+                  src="https://gma.edu.ng/wp-content/uploads/2019/10/logo-use3.jpg?ed8dcc&ed8dcc" 
+                  alt="Global Maritime Academy Logo"
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              <span className="text-2xl font-bold text-primary">Global Maritime Academy</span>
             </Link>
             
             {isOnDashboard && user && (
@@ -105,15 +124,7 @@ const Header: React.FC = () => {
                     <User className="w-4 h-4 mr-2" />
                     Dashboard
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => {
-                    const dashboardRoute = getDashboardRoute();
-                    navigate(dashboardRoute);
-                    // Use a small delay to ensure navigation completes, then trigger tab change
-                    setTimeout(() => {
-                      const event = new CustomEvent('change-dashboard-tab', { detail: 'settings' });
-                      window.dispatchEvent(event);
-                    }, 100);
-                  }}>
+                  <DropdownMenuItem onClick={handleSettingsClick}>
                     <Settings className="w-4 h-4 mr-2" />
                     Settings
                   </DropdownMenuItem>

@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Shield, Plus, Download } from 'lucide-react';
+import { Shield, Plus, Download, UserPlus } from 'lucide-react';
 import { useStudents, useAddStudent } from '../hooks/useStudents';
 import { useResults } from '../hooks/useResults';
 import StudentForm from '../components/lecturer/StudentForm';
@@ -17,11 +17,15 @@ import { useCourses, useDepartments } from '../hooks/useCourses';
 import DepartmentManagement from '../components/admin/DepartmentManagement';
 import SessionManagement from '../components/admin/SessionManagement';
 import CourseManagement from '../components/admin/CourseManagement';
+import AddLecturerDialog from '../components/admin/AddLecturerDialog';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 const SuperAdminDashboard: React.FC = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('students');
   const [isAddStudentDialogOpen, setIsAddStudentDialogOpen] = useState(false);
+  const [isAddLecturerDialogOpen, setIsAddLecturerDialogOpen] = useState(false);
   
   const { data: students } = useStudents();
   const { data: sessions } = useSessions();
@@ -29,6 +33,23 @@ const SuperAdminDashboard: React.FC = () => {
   const { data: departments } = useDepartments();
   const { data: results } = useResults();
   const addStudentMutation = useAddStudent();
+
+  // Fetch lecturers
+  const { data: lecturers } = useQuery({
+    queryKey: ['lecturers'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('lecturer_profiles')
+        .select(`
+          *,
+          user:users(email, is_active, created_at)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data;
+    }
+  });
 
   const handleExportStudents = () => {
     if (!students) return;
@@ -86,8 +107,9 @@ const SuperAdminDashboard: React.FC = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="students">Students</TabsTrigger>
+            <TabsTrigger value="lecturers">Lecturers</TabsTrigger>
             <TabsTrigger value="results">Results</TabsTrigger>
             <TabsTrigger value="departments">Departments</TabsTrigger>
             <TabsTrigger value="sessions">Sessions</TabsTrigger>
@@ -130,6 +152,53 @@ const SuperAdminDashboard: React.FC = () => {
                         <TableCell>{student.level}</TableCell>
                         <TableCell>
                           <Badge variant="default">{student.status}</Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="lecturers" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Lecturer Management</CardTitle>
+                <CardDescription>Manage lecturer accounts and profiles</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex justify-between items-center mb-4">
+                  <Button onClick={() => setIsAddLecturerDialogOpen(true)}>
+                    <UserPlus className="w-4 h-4 mr-2" />
+                    Add New Lecturer
+                  </Button>
+                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Employee ID</TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Department</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Created</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {lecturers?.map((lecturer) => (
+                      <TableRow key={lecturer.id}>
+                        <TableCell>{lecturer.employee_id}</TableCell>
+                        <TableCell>{lecturer.first_name} {lecturer.last_name}</TableCell>
+                        <TableCell>{lecturer.user?.email}</TableCell>
+                        <TableCell>{lecturer.department}</TableCell>
+                        <TableCell>
+                          <Badge variant={lecturer.user?.is_active ? "default" : "secondary"}>
+                            {lecturer.user?.is_active ? "Active" : "Inactive"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {new Date(lecturer.user?.created_at || '').toLocaleDateString()}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -222,6 +291,11 @@ const SuperAdminDashboard: React.FC = () => {
           />
         </DialogContent>
       </Dialog>
+
+      <AddLecturerDialog 
+        open={isAddLecturerDialogOpen}
+        onOpenChange={setIsAddLecturerDialogOpen}
+      />
     </div>
   );
 };

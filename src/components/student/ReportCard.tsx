@@ -43,7 +43,7 @@ const ReportCard: React.FC = () => {
         .from('students')
         .select(`
           *,
-          department:departments(name)
+          department:departments!students_department_id_fkey(name)
         `)
         .eq('user_id', user.id)
         .single();
@@ -170,7 +170,7 @@ const ReportCard: React.FC = () => {
     const studentInfo = {
       name: `${currentStudent.first_name} ${currentStudent.last_name}`,
       matricNumber: currentStudent.matric_number,
-      department: currentStudent.department?.name || 'N/A',
+      department: currentStudent.department?.name || currentStudent.department || 'N/A',
       level: currentStudent.level,
       session: selectedSession,
       semester: selectedSemester
@@ -190,7 +190,7 @@ const ReportCard: React.FC = () => {
     const studentInfo = {
       name: `${currentStudent.first_name} ${currentStudent.last_name}`,
       matricNumber: currentStudent.matric_number,
-      department: currentStudent.department?.name || 'N/A',
+      department: currentStudent.department?.name || currentStudent.department || 'N/A',
       level: currentStudent.level,
       session: selectedSession,
       semester: selectedSemester
@@ -313,15 +313,15 @@ const ReportCard: React.FC = () => {
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <h3 className="font-semibold text-lg">
-                  {currentStudent.first_name} {currentStudent.last_name}
+                  {currentStudent?.first_name} {currentStudent?.last_name}
                 </h3>
-                <p className="text-gray-600">Matric No: {currentStudent.matric_number}</p>
-                <p className="text-gray-600">Department: {currentStudent.department?.name || 'N/A'}</p>
+                <p className="text-gray-600">Matric No: {currentStudent?.matric_number}</p>
+                <p className="text-gray-600">Department: {currentStudent?.department?.name || currentStudent?.department || 'N/A'}</p>
               </div>
               <div>
                 <p className="text-gray-600">Session: {selectedSession || 'N/A'}</p>
                 <p className="text-gray-600">Semester: {selectedSemester || 'N/A'}</p>
-                <p className="text-gray-600">Level: {currentStudent.level}</p>
+                <p className="text-gray-600">Level: {currentStudent?.level}</p>
               </div>
             </div>
           </div>

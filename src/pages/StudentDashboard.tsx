@@ -2,12 +2,11 @@
 import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { GraduationCap, User, BarChart3, FileText } from 'lucide-react';
+import { User, BarChart3, FileText } from 'lucide-react';
 import StudentProfile from '../components/student/StudentProfile';
 import StudentResults from '../components/student/StudentResults';
 import StudentProfileSettings from '../components/student/StudentProfileSettings';
 import ReportCard from '../components/student/ReportCard';
-import StudentCourseRegistration from '../components/student/StudentCourseRegistration';
 
 const StudentDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState('profile');
@@ -35,14 +34,10 @@ const StudentDashboard: React.FC = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-5 mb-8">
+          <TabsList className="grid w-full grid-cols-4 mb-8">
             <TabsTrigger value="profile" className="flex items-center">
               <User className="w-4 h-4 mr-2" />
               Profile
-            </TabsTrigger>
-            <TabsTrigger value="registration" className="flex items-center">
-              <GraduationCap className="w-4 h-4 mr-2" />
-              Course Registration
             </TabsTrigger>
             <TabsTrigger value="results" className="flex items-center">
               <BarChart3 className="w-4 h-4 mr-2" />
@@ -53,17 +48,13 @@ const StudentDashboard: React.FC = () => {
               Report Card
             </TabsTrigger>
             <TabsTrigger value="settings" className="flex items-center">
-              <GraduationCap className="w-4 h-4 mr-2" />
+              <User className="w-4 h-4 mr-2" />
               Settings
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="profile">
             <StudentProfile />
-          </TabsContent>
-
-          <TabsContent value="registration">
-            <StudentCourseRegistration />
           </TabsContent>
 
           <TabsContent value="results">
