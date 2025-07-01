@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import Header from '../components/Header';
@@ -34,20 +33,49 @@ const SuperAdminDashboard: React.FC = () => {
   const { data: results } = useResults();
   const addStudentMutation = useAddStudent();
 
-  // Fetch lecturers
-  const { data: lecturers } = useQuery({
+  // Fetch lecturers with improved query
+  const { data: lecturers, isLoading: lecturersLoading } = useQuery({
     queryKey: ['lecturers'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      console.log('Fetching lecturers...');
+      
+      // First get all lecturer profiles
+      const { data: profiles, error: profilesError } = await supabase
         .from('lecturer_profiles')
-        .select(`
-          *,
-          user:users(email, is_active, created_at)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      return data;
+      if (profilesError) {
+        console.error('Error fetching lecturer profiles:', profilesError);
+        throw profilesError;
+      }
+
+      // Then get user data for each lecturer
+      const lecturersWithUsers = await Promise.all(
+        profiles.map(async (profile) => {
+          const { data: userData, error: userError } = await supabase
+            .from('users')
+            .select('email, is_active, created_at')
+            .eq('id', profile.user_id)
+            .single();
+
+          if (userError) {
+            console.error('Error fetching user data for lecturer:', userError);
+            return {
+              ...profile,
+              user: null
+            };
+          }
+
+          return {
+            ...profile,
+            user: userData
+          };
+        })
+      );
+
+      console.log('Fetched lecturers:', lecturersWithUsers);
+      return lecturersWithUsers;
     }
   });
 
@@ -173,37 +201,56 @@ const SuperAdminDashboard: React.FC = () => {
                     <UserPlus className="w-4 h-4 mr-2" />
                     Add New Lecturer
                   </Button>
+                  <div className="text-sm text-gray-600">
+                    {lecturersLoading ? 'Loading...' : `Total Lecturers: ${lecturers?.length || 0}`}
+                  </div>
                 </div>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Employee ID</TableHead>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Department</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Created</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {lecturers?.map((lecturer) => (
-                      <TableRow key={lecturer.id}>
-                        <TableCell>{lecturer.employee_id}</TableCell>
-                        <TableCell>{lecturer.first_name} {lecturer.last_name}</TableCell>
-                        <TableCell>{lecturer.user?.email}</TableCell>
-                        <TableCell>{lecturer.department}</TableCell>
-                        <TableCell>
-                          <Badge variant={lecturer.user?.is_active ? "default" : "secondary"}>
-                            {lecturer.user?.is_active ? "Active" : "Inactive"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {new Date(lecturer.user?.created_at || '').toLocaleDateString()}
-                        </TableCell>
+                
+                {lecturersLoading ? (
+                  <div className="text-center py-4">Loading lecturers...</div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Employee ID</TableHead>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Department</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Created</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {lecturers && lecturers.length > 0 ? (
+                        lecturers.map((lecturer) => (
+                          <TableRow key={lecturer.id}>
+                            <TableCell>{lecturer.employee_id || 'N/A'}</TableCell>
+                            <TableCell>{lecturer.first_name} {lecturer.last_name}</TableCell>
+                            <TableCell>{lecturer.user?.email || 'N/A'}</TableCell>
+                            <TableCell>{lecturer.department || 'N/A'}</TableCell>
+                            <TableCell>
+                              <Badge variant={lecturer.user?.is_active ? "default" : "secondary"}>
+                                {lecturer.user?.is_active ? "Active" : "Inactive"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              {lecturer.user?.created_at 
+                                ? new Date(lecturer.user.created_at).toLocaleDateString()
+                                : 'N/A'
+                              }
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={6} className="text-center py-4">
+                            No lecturers found
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

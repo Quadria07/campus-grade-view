@@ -30,6 +30,17 @@ const AddLecturerDialog: React.FC<AddLecturerDialogProps> = ({ open, onOpenChang
 
   const createLecturerMutation = useMutation({
     mutationFn: async (lecturerData: any) => {
+      // Check if email already exists
+      const { data: existingUser, error: checkError } = await supabase
+        .from('users')
+        .select('email')
+        .eq('email', lecturerData.email)
+        .single();
+
+      if (existingUser) {
+        throw new Error('A user with this email already exists');
+      }
+
       // Create user account with explicit type casting
       const { data: userId, error } = await supabase.rpc('create_user_with_password', {
         p_email: lecturerData.email,
@@ -37,7 +48,12 @@ const AddLecturerDialog: React.FC<AddLecturerDialogProps> = ({ open, onOpenChang
         p_role: 'lecturer'
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error.message.includes('duplicate key value') || error.message.includes('users_email_key')) {
+          throw new Error('A user with this email already exists');
+        }
+        throw error;
+      }
 
       // Create lecturer profile
       const { error: profileError } = await supabase
@@ -66,6 +82,7 @@ const AddLecturerDialog: React.FC<AddLecturerDialogProps> = ({ open, onOpenChang
       onOpenChange(false);
     },
     onError: (error: any) => {
+      console.error('Create lecturer error:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to create lecturer account.",
