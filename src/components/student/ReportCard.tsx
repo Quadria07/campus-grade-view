@@ -140,13 +140,9 @@ const ReportCard: React.FC = () => {
   const getGradePoint = (grade: string): number => {
     switch (grade) {
       case 'A': return 4.0;
-      case 'AB': return 3.5;
       case 'B': return 3.0;
-      case 'BC': return 2.5;
       case 'C': return 2.0;
-      case 'CD': return 1.5;
       case 'D': return 1.0;
-      case 'E': return 0.5;
       case 'F': return 0.0;
       default: return 0.0;
     }
@@ -423,16 +419,12 @@ const ReportCard: React.FC = () => {
           {/* Grade Scale */}
           <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-gray-50 rounded-lg">
             <h4 className="font-medium mb-2 text-sm sm:text-base">Grade Scale</h4>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 text-xs sm:text-sm">
-              <div>A (90-100): 4.0</div>
-              <div>AB (80-89): 3.5</div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs sm:text-sm">
+              <div>A (80-100): 4.0</div>
               <div>B (70-79): 3.0</div>
-              <div>BC (65-69): 2.5</div>
-              <div>C (60-64): 2.0</div>
-              <div>CD (55-59): 1.5</div>
-              <div>D (50-54): 1.0</div>
-              <div>E (45-49): 0.5</div>
-              <div>F (0-44): 0.0</div>
+              <div>C (60-69): 2.0</div>
+              <div>D (50-59): 1.0</div>
+              <div>F (0-49): 0.0</div>
             </div>
           </div>
         </CardContent>

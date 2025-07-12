@@ -70,10 +70,10 @@ const StudentResults: React.FC = () => {
   );
 
   const getGradeColor = (grade: string) => {
-    if (grade.startsWith('A')) return 'text-green-600 bg-green-50';
-    if (grade.startsWith('B')) return 'text-blue-600 bg-blue-50';
-    if (grade.startsWith('C')) return 'text-yellow-600 bg-yellow-50';
-    if (grade.startsWith('D')) return 'text-orange-600 bg-orange-50';
+    if (grade === 'A') return 'text-green-600 bg-green-50';
+    if (grade === 'B') return 'text-blue-600 bg-blue-50';
+    if (grade === 'C') return 'text-yellow-600 bg-yellow-50';
+    if (grade === 'D') return 'text-orange-600 bg-orange-50';
     return 'text-red-600 bg-red-50';
   };
 

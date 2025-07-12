@@ -152,7 +152,7 @@ export const generateResultPDF = (
           
           .grade-scale-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(3, 1fr);
             gap: 10px;
             font-size: 11px;
           }
@@ -277,18 +277,11 @@ export const generateResultPDF = (
         <div class="grade-scale">
           <h4>GRADING SYSTEM</h4>
           <div class="grade-scale-grid">
-            <div>A (90-100): 4.0</div>
-            <div>AB (80-89): 3.5</div>
+            <div>A (80-100): 4.0</div>
             <div>B (70-79): 3.0</div>
-            <div>BC (65-69): 2.5</div>
-            <div>C (60-64): 2.0</div>
-            <div>CD (55-59): 1.5</div>
-            <div>D (50-54): 1.0</div>
-            <div>E (45-49): 0.5</div>
-            <div>F (0-44): 0.0</div>
-            <div></div>
-            <div></div>
-            <div></div>
+            <div>C (60-69): 2.0</div>
+            <div>D (50-59): 1.0</div>
+            <div>F (0-49): 0.0</div>
           </div>
         </div>
 
