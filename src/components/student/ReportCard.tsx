@@ -57,8 +57,9 @@ const ReportCard: React.FC = () => {
       return data;
     },
     enabled: !!user?.id,
-    retry: 3,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 2,
+    staleTime: 1 * 60 * 1000, // 1 minute
+    refetchOnMount: true,
   });
 
   // Get student results with better error handling
@@ -104,10 +105,9 @@ const ReportCard: React.FC = () => {
       }));
     },
     enabled: !!currentStudent?.id,
-    retry: 3,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchOnMount: true, // Always refetch when component mounts
-    refetchOnWindowFocus: false, // Don't refetch on window focus
+    retry: 2,
+    staleTime: 1 * 60 * 1000, // 1 minute
+    refetchOnMount: true,
   });
 
   // Get unique sessions and semesters from results
