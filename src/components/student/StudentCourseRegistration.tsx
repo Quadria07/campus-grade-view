@@ -68,6 +68,11 @@ const StudentCourseRegistration: React.FC = () => {
     return departmentMatch && levelMatch && !alreadyRegistered;
   });
 
+  // Filter out items with empty or invalid IDs
+  const validCourses = availableCourses.filter(course => course.id && course.id.trim() !== '');
+  const validSessions = sessions.filter(session => session.id && session.id.trim() !== '');
+  const validSemesters = semesters.filter(semester => semester.id && semester.id.trim() !== '');
+
   const handleRegisterCourse = async () => {
     if (!currentStudent || !selectedCourseId || !selectedSessionId || !selectedSemesterId) {
       toast({
@@ -171,7 +176,7 @@ const StudentCourseRegistration: React.FC = () => {
                   <SelectValue placeholder="Select course" />
                 </SelectTrigger>
                 <SelectContent>
-                  {availableCourses.filter(course => course.id && course.id.trim() !== '').map((course) => (
+                  {validCourses.map((course) => (
                     <SelectItem key={course.id} value={course.id}>
                       {course.code} - {course.name} ({course.units} units)
                     </SelectItem>
@@ -187,7 +192,7 @@ const StudentCourseRegistration: React.FC = () => {
                   <SelectValue placeholder="Select session" />
                 </SelectTrigger>
                 <SelectContent>
-                  {sessions.filter(session => session.id && session.id.trim() !== '').map((session) => (
+                  {validSessions.map((session) => (
                     <SelectItem key={session.id} value={session.id}>
                       {session.name}
                     </SelectItem>
@@ -203,7 +208,7 @@ const StudentCourseRegistration: React.FC = () => {
                   <SelectValue placeholder="Select semester" />
                 </SelectTrigger>
                 <SelectContent>
-                  {semesters.filter(semester => semester.id && semester.id.trim() !== '').map((semester) => (
+                  {validSemesters.map((semester) => (
                     <SelectItem key={semester.id} value={semester.id}>
                       {semester.name}
                     </SelectItem>
