@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -189,10 +188,10 @@ const ResultManagement: React.FC = () => {
               table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
               th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
               th { background-color: #f2f2f2; }
-              .grade-A, .grade-AB { color: #22c55e; font-weight: bold; }
-              .grade-B, .grade-BC { color: #3b82f6; font-weight: bold; }
-              .grade-C, .grade-CD { color: #eab308; font-weight: bold; }
-              .grade-D, .grade-E { color: #f97316; font-weight: bold; }
+              .grade-A { color: #22c55e; font-weight: bold; }
+              .grade-B { color: #3b82f6; font-weight: bold; }
+              .grade-C { color: #eab308; font-weight: bold; }
+              .grade-D { color: #f97316; font-weight: bold; }
               .grade-F { color: #ef4444; font-weight: bold; }
               @media print { 
                 button { display: none; }
@@ -242,10 +241,10 @@ const ResultManagement: React.FC = () => {
   };
 
   const getGradeColor = (grade: string) => {
-    if (grade === 'A' || grade === 'AB') return 'text-green-600 bg-green-50';
-    if (grade === 'B' || grade === 'BC') return 'text-blue-600 bg-blue-50';
-    if (grade === 'C' || grade === 'CD') return 'text-yellow-600 bg-yellow-50';
-    if (grade === 'D' || grade === 'E') return 'text-orange-600 bg-orange-50';
+    if (grade === 'A') return 'text-green-600 bg-green-50';
+    if (grade === 'B') return 'text-blue-600 bg-blue-50';
+    if (grade === 'C') return 'text-yellow-600 bg-yellow-50';
+    if (grade === 'D') return 'text-orange-600 bg-orange-50';
     return 'text-red-600 bg-red-50';
   };
 
