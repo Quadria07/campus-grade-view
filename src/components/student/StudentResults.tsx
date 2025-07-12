@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -71,9 +70,10 @@ const StudentResults: React.FC = () => {
 
   const getGradeColor = (grade: string) => {
     if (grade === 'A') return 'text-green-600 bg-green-50';
-    if (grade === 'B') return 'text-blue-600 bg-blue-50';
-    if (grade === 'C') return 'text-yellow-600 bg-yellow-50';
-    if (grade === 'D') return 'text-orange-600 bg-orange-50';
+    if (grade === 'AB' || grade === 'B') return 'text-blue-600 bg-blue-50';
+    if (grade === 'BC' || grade === 'C') return 'text-yellow-600 bg-yellow-50';
+    if (grade === 'CD' || grade === 'D') return 'text-orange-600 bg-orange-50';
+    if (grade === 'E') return 'text-red-400 bg-red-50';
     return 'text-red-600 bg-red-50';
   };
 

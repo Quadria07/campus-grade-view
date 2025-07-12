@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -16,13 +15,17 @@ export interface StudentResult {
   remark: string;
 }
 
-// Grade point mapping based on the calculate_grade function
+// Grade point mapping based on the new calculate_grade function
 const getGradePoint = (grade: string): number => {
   switch (grade) {
     case 'A': return 4.0;
+    case 'AB': return 3.5;
     case 'B': return 3.0;
+    case 'BC': return 2.5;
     case 'C': return 2.0;
+    case 'CD': return 1.5;
     case 'D': return 1.0;
+    case 'E': return 0.5;
     case 'F': return 0.0;
     default: return 0.0;
   }

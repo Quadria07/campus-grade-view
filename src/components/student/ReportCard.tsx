@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -140,9 +139,13 @@ const ReportCard: React.FC = () => {
   const getGradePoint = (grade: string): number => {
     switch (grade) {
       case 'A': return 4.0;
+      case 'AB': return 3.5;
       case 'B': return 3.0;
+      case 'BC': return 2.5;
       case 'C': return 2.0;
+      case 'CD': return 1.5;
       case 'D': return 1.0;
+      case 'E': return 0.5;
       case 'F': return 0.0;
       default: return 0.0;
     }
@@ -163,10 +166,11 @@ const ReportCard: React.FC = () => {
   };
 
   const getGradeColor = (grade: string) => {
-    if (grade.startsWith('A')) return 'text-green-600 bg-green-50';
-    if (grade.startsWith('B')) return 'text-blue-600 bg-blue-50';
-    if (grade.startsWith('C')) return 'text-yellow-600 bg-yellow-50';
-    if (grade.startsWith('D')) return 'text-orange-600 bg-orange-50';
+    if (grade === 'A') return 'text-green-600 bg-green-50';
+    if (grade === 'AB' || grade === 'B') return 'text-blue-600 bg-blue-50';
+    if (grade === 'BC' || grade === 'C') return 'text-yellow-600 bg-yellow-50';
+    if (grade === 'CD' || grade === 'D') return 'text-orange-600 bg-orange-50';
+    if (grade === 'E') return 'text-red-400 bg-red-50';
     return 'text-red-600 bg-red-50';
   };
 
@@ -420,11 +424,15 @@ const ReportCard: React.FC = () => {
           <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-gray-50 rounded-lg">
             <h4 className="font-medium mb-2 text-sm sm:text-base">Grade Scale</h4>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs sm:text-sm">
-              <div>A (80-100): 4.0</div>
-              <div>B (70-79): 3.0</div>
-              <div>C (60-69): 2.0</div>
-              <div>D (50-59): 1.0</div>
-              <div>F (0-49): 0.0</div>
+              <div>A (75-100): 4.0</div>
+              <div>AB (70-74): 3.5</div>
+              <div>B (65-69): 3.0</div>
+              <div>BC (60-64): 2.5</div>
+              <div>C (55-59): 2.0</div>
+              <div>CD (50-54): 1.5</div>
+              <div>D (45-49): 1.0</div>
+              <div>E (40-44): 0.5</div>
+              <div>F (0-39): 0.0</div>
             </div>
           </div>
         </CardContent>
