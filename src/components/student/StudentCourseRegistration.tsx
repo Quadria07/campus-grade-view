@@ -171,7 +171,7 @@ const StudentCourseRegistration: React.FC = () => {
                   <SelectValue placeholder="Select course" />
                 </SelectTrigger>
                 <SelectContent>
-                  {availableCourses.map((course) => (
+                  {availableCourses.filter(course => course.id && course.id.trim() !== '').map((course) => (
                     <SelectItem key={course.id} value={course.id}>
                       {course.code} - {course.name} ({course.units} units)
                     </SelectItem>
@@ -187,7 +187,7 @@ const StudentCourseRegistration: React.FC = () => {
                   <SelectValue placeholder="Select session" />
                 </SelectTrigger>
                 <SelectContent>
-                  {sessions.map((session) => (
+                  {sessions.filter(session => session.id && session.id.trim() !== '').map((session) => (
                     <SelectItem key={session.id} value={session.id}>
                       {session.name}
                     </SelectItem>
@@ -203,7 +203,7 @@ const StudentCourseRegistration: React.FC = () => {
                   <SelectValue placeholder="Select semester" />
                 </SelectTrigger>
                 <SelectContent>
-                  {semesters.map((semester) => (
+                  {semesters.filter(semester => semester.id && semester.id.trim() !== '').map((semester) => (
                     <SelectItem key={semester.id} value={semester.id}>
                       {semester.name}
                     </SelectItem>
