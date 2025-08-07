@@ -176,11 +176,8 @@ const CourseManagement: React.FC = () => {
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                <SelectItem value="100">100 Level</SelectItem>
-                <SelectItem value="200">200 Level</SelectItem>
-                <SelectItem value="300">300 Level</SelectItem>
-                <SelectItem value="400">400 Level</SelectItem>
-                <SelectItem value="500">500 Level</SelectItem>
+                <SelectItem value="ND 1">ND 1</SelectItem>
+                <SelectItem value="ND 2">ND 2</SelectItem>
               </SelectContent>
             </Select>
             <FormMessage />

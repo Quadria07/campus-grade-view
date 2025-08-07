@@ -69,7 +69,7 @@ const BulkUploadDialog: React.FC<BulkUploadDialogProps> = ({ open, onOpenChange 
         'Doe',
         'john.doe@university.edu',
         '+234-123-456-7890',
-        '100L',
+        'ND 1',
         'active',
         '2000-05-15',
         'male',
@@ -141,8 +141,8 @@ const BulkUploadDialog: React.FC<BulkUploadDialogProps> = ({ open, onOpenChange 
 
     if (!student.level) {
       errors.push({ row, field: 'level', message: 'Level is required' });
-    } else if (!['100L', '200L', '300L', '400L', '500L'].includes(student.level)) {
-      errors.push({ row, field: 'level', message: 'Level must be 100L, 200L, 300L, 400L, or 500L' });
+    } else if (!['ND 1', 'ND 2'].includes(student.level)) {
+      errors.push({ row, field: 'level', message: 'Level must be ND 1 or ND 2' });
     }
 
     if (student.status && !['active', 'inactive', 'graduated'].includes(student.status)) {

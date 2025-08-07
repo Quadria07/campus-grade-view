@@ -62,10 +62,8 @@ const StudentForm: React.FC<StudentFormProps> = ({ student, onSubmit, onCancel, 
               <SelectValue placeholder="Select level" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="100L">100 Level</SelectItem>
-              <SelectItem value="200L">200 Level</SelectItem>
-              <SelectItem value="300L">300 Level</SelectItem>
-              <SelectItem value="400L">400 Level</SelectItem>
+              <SelectItem value="ND 1">ND 1</SelectItem>
+              <SelectItem value="ND 2">ND 2</SelectItem>
             </SelectContent>
           </Select>
         </div>

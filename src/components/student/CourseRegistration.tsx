@@ -33,7 +33,7 @@ const CourseRegistration: React.FC = () => {
       units: 3,
       semester: 'First',
       department: 'Computer Science',
-      level: '400',
+      level: 'ND 2',
       lecturer: 'Dr. Johnson',
       isRegistered: false,
       isRequired: true
@@ -45,7 +45,7 @@ const CourseRegistration: React.FC = () => {
       units: 3,
       semester: 'First',
       department: 'Computer Science',
-      level: '400',
+      level: 'ND 2',
       lecturer: 'Prof. Smith',
       isRegistered: true,
       isRequired: true
@@ -57,7 +57,7 @@ const CourseRegistration: React.FC = () => {
       units: 2,
       semester: 'First',
       department: 'Computer Science',
-      level: '400',
+      level: 'ND 2',
       lecturer: 'Dr. Williams',
       isRegistered: false,
       isRequired: false
@@ -69,7 +69,7 @@ const CourseRegistration: React.FC = () => {
       units: 3,
       semester: 'First',
       department: 'Mathematics',
-      level: '400',
+      level: 'ND 2',
       lecturer: 'Dr. Brown',
       isRegistered: false,
       isRequired: false

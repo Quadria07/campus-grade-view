@@ -106,7 +106,7 @@ const StudentProfileSettings: React.FC = () => {
 
                   <div className="space-y-2">
                     <Label className="text-sm font-medium text-gray-500">Level</Label>
-                    <span className="text-gray-700">{user?.profile?.level || '200'}</span>
+                    <span className="text-gray-700">{user?.profile?.level || 'ND 1'}</span>
                   </div>
                 </div>
 
